@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Java LSP 指南</title>
+    
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           =========================================== */
+        :root {
+            /* Colors - Terminal Green Theme */
+            --bg-dark: #0d1117;
+            --bg-secondary: #161b22;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --terminal-green: #39d353;
+            --terminal-dim: #238636;
+            --terminal-glow: rgba(57, 211, 83, 0.15);
+            --border-color: #30363d;
+            --error-red: #f85149;
+            --warning-yellow: #d29922;
+
+            /* Typography - JetBrains Mono */
+            --font-display: 'JetBrains Mono', 'Courier New', monospace;
+            --font-body: 'JetBrains Mono', 'Courier New', monospace;
+            
+            /* Sizes - MUST use clamp() */
+            --title-size: clamp(1.5rem, 5vw, 3rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.5rem);
+            --body-size: clamp(0.7rem, 1.3vw, 0.95rem);
+            --code-size: clamp(0.6rem, 1.1vw, 0.85rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1rem, 3.5vw, 3rem);
+            --content-gap: clamp(0.5rem, 1.5vw, 1.5rem);
+            --element-gap: clamp(0.3rem, 1vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.5s;
+        }
+
+        /* Load JetBrains Mono font */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            font-family: var(--font-body);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        /* ===========================================
+           VIEWPORT FITTING
+           =========================================== */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100% auto;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        /* ===========================================
+           TERMINAL THEME ELEMENTS
+           =========================================== */
+        /* Scan lines effect */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(57, 211, 83, 0.03) 2px,
+                rgba(57, 211, 83, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Blinking cursor */
+        .cursor {
+            display: inline-block;
+            width: clamp(8px, 1vw, 12px);
+            height: var(--body-size);
+            background: var(--terminal-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Terminal prompt */
+        .prompt {
+            color: var(--terminal-green);
+            font-weight: 600;
+        }
+
+        .prompt::before {
+            content: '$ ';
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: var(--element-gap);
+            font-family: var(--font-display);
+            font-size: var(--code-size);
+            line-height: 1.5;
+            overflow-x: auto;
+            color: var(--text-primary);
+            max-height: min(40vh, 300px);
+            overflow-y: auto;
+        }
+
+        .code-block .comment {
+            color: var(--text-secondary);
+        }
+
+        .code-block .keyword {
+            color: #ff7b72;
+        }
+
+        .code-block .string {
+            color: #a5d6ff;
+        }
+
+        .code-block .function {
+            color: #d2a8ff;
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 700;
+            color: var(--terminal-green);
+            line-height: 1.2;
+            margin-bottom: var(--content-gap);
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+            margin-bottom: var(--content-gap);
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: var(--h3-size);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--element-gap);
+        }
+
+        p {
+            font-size: var(--body-size);
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: var(--element-gap);
+        }
+
+        /* ===========================================
+           LISTS
+           =========================================== */
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+            gap: var(--element-gap);
+        }
+
+        .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.5;
+            color: var(--text-secondary);
+            position: relative;
+            padding-left: calc(var(--element-gap) * 1.5);
+        }
+
+        .bullet-list li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--terminal-green);
+        }
+
+        /* ===========================================
+           GRID LAYOUTS
+           =========================================== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--content-gap);
+            height: 100%;
+        }
+
+        .grid-2 > div {
+            overflow: hidden;
+        }
+
+        /* ===========================================
+           SPECIAL ELEMENTS
+           =========================================== */
+        .highlight-box {
+            background: var(--terminal-glow);
+            border-left: 3px solid var(--terminal-green);
+            padding: var(--element-gap);
+            margin: var(--element-gap) 0;
+        }
+
+        .highlight-box p {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+
+        .tag {
+            display: inline-block;
+            background: var(--terminal-dim);
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: var(--code-size);
+            margin-right: var(--element-gap);
+        }
+
+        /* ===========================================
+           NAVIGATION
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: var(--slide-padding);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .nav-dots button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border-color);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dots button.active {
+            background: var(--terminal-green);
+            transform: scale(1.3);
+        }
+
+        .nav-dots button:hover {
+            background: var(--terminal-dim);
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: var(--slide-padding);
+            right: var(--slide-padding);
+            font-size: var(--code-size);
+            color: var: var(--text-secondary);
+            font-family: var(--font-display);
+        }
+
+        .keyboard-hint {
+            position: absolute;
+            bottom: var(--slide-padding);
+            left: var(--slide-padding);
+            font-size: var(--code-size);
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stagger animations */
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        /* ===========================================
+           RESPONSIVE BREAKPOINTS
+           =========================================== */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 2.5vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.2vw, 1rem);
+                --title-size: clamp(1.25rem, 4vw, 2rem);
+                --body-size: clamp(0.65rem, 1.1vw, 0.85rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2vw, 1.5rem);
+                --title-size: clamp(1.1rem, 3.5vw, 1.75rem);
+                --body-size: clamp(0.6rem, 1vw, 0.8rem);
+            }
+            .nav-dots, .keyboard-hint {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: var(--element-gap);
+            }
+            :root {
+                --title-size: clamp(1.25rem, 7vw, 2.5rem);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Dots -->
+    <nav class="nav-dots"></nav>
+
+    <!-- ===========================================
+         SLIDE 1: Title
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <span class="prompt"></span>
+                <h1>Claude Code<br>Java LSP 指南<span class="cursor"></span></h1>
+            </div>
+            <div class="reveal">
+                <p style="font-size: clamp(1rem, 2vw, 1.5rem); color: var(--text-primary);">
+                    如何优雅地为 Claude Code 开启 Java 语言智能
+                </p>
+            </div>
+            <div class="reveal" style="margin-top: var(--content-gap);">
+                <span class="tag">LSP</span>
+                <span class="tag">Java</span>
+                <span class="tag">Claude Code</span>
+            </div>
+        </div>
+        <span class="slide-number">01</span>
+        <span class="keyboard-hint">使用 ← → 或 Space 键导航</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 2: 什么是 LSP
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>什么是 LSP？<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <p>LSP (Language Server Protocol) 是一种标准通信协议，让"代码编辑端"与"语言分析端"分工合作。</p>
+            </div>
+            <div class="reveal">
+                <div class="highlight-box">
+                    <p><strong>工作原理：</strong></p>
+                    <p>客户端发起请求（查找定义、引用、诊断错误）→ 语言服务器返回结构化结果</p>
+                </div>
+            </div>
+            <div class="reveal">
+                <ul class="bullet-list">
+                    <li>编辑器负责 UI 和用户交互</li>
+                    <li>语言服务器负责代码分析和智能提示</li>
+                    <li>通过 JSON-RPC 标准协议通信</li>
+                </ul>
+            </div>
+        </div>
+        <span class="slide-number">02</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 3: 为什么需要 LSP
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content grid-2">
+            <div class="reveal">
+                <h3>❌ 不开 LSP 的问题<span class="cursor"></span></h3>
+                <ul class="bullet-list">
+                    <li>能找到"像定义"的地方，但一定准确</li>
+                    <li>能读懂代码意图，但缺乏实时诊断</li>
+                    <li>多模块项目中依赖文本搜索</li>
+                    <li>Refactor 时缺少精确引用信息</li>
+                </ul>
+            </div>
+            <div class="reveal">
+                <h3>✅ 开启 LSP 后的增强<span class="cursor"></span></h3>
+                <ul class="bullet-list">
+                    <li>精确跳转到定义、查找引用</li>
+                    <li>获取实时类型诊断和错误信息</li>
+                    <li>查看接口的所有实现类</li>
+                    <li>分析调用层级、列出 workspace symbols</li>
+                </ul>
+            </div>
+        </div>
+        <div class="reveal" style="padding: 0 var(--slide-padding);">
+            <div class="highlight-box">
+                <p><strong>总结：</strong>不开 LSP 时，Claude 是聪明的代码阅读者；开了 LSP 后，它是接上了 IDE 代码智能的工程助手。</p>
+            </div>
+        </div>
+        <span class="slide-number">03</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 4: LSP 工作机制
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>LSP 工作机制<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <p>Claude Code 通过三层协作实现 LSP 能力：</p>
+            </div>
+            <div class="reveal">
+                <div class="code-block">
+<span class="comment"># 1. Claude Code 内建的 LSP tool</span>
+<span class="keyword">const</span> lspTool = <span class="function">require</span>(<span class="string">'@anthropic-ai/claude-code'</span>)
+
+<span class="comment"># 2. Code intelligence plugin (Java 对应 jdtls-lsp)</span>
+<span class="keyword">const</span> plugin = <span class="function">install</span>(<span class="string">'jdtls-lsp'</span>)
+
+<span class="comment"># 3. 系统里的语言服务器 binary (Java 对应 jdtls)</span>
+$ <span class="prompt">which jdtls</span>
+/usr/bin/jdtls
+                </div>
+            </div>
+            <div class="reveal">
+                <p style="margin-top: var(--element-gap);"><strong>流程：</strong>打开 Java 项目 → 加载插件 → 启动 jdtls → 分析 workspace → 通过 LSP tool 请求信息</p>
+            </div>
+        </div>
+        <span class="slide-number">04</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: 最佳实践路径
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>为什么选择官方插件？<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <p>对于 Java 这种"官方已覆盖语言"，最优雅的方式是直接使用官方 <code>jdtls-lsp</code> 插件 + 系统里的 <code>jdtls</code>。</p>
+            </div>
+            <div class="reveal">
+                <h3>优势：</h3>
+                <ul class="bullet-list">
+                    <li><strong>更稳：</strong>不用猜启动参数、通信方式、扩展名映射</li>
+                    <li><strong>更少坑：</strong>避免 command 配错、PATH 问题等常见问题</li>
+                    <li><strong>更符合官方维护路径：</strong>未来升级时兼容性更好</li>
+                </ul>
+            </div>
+        </div>
+        <span class="slide-number">05</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 6: 整体安装流程
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>整体安装流程的七步曲<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <div class="code-block">
+<span class="keyword">Step 1:</span> 安装 JDK
+<span class="keyword">Step 2:</span> 安装 jdtls
+<span class="keyword">Step 3:</span> 确认 jdtls 在 PATH 中
+<span class="keyword">Step 4:</span> 在 Claude Code 安装官方插件 jdtls-lsp
+<span class="keyword">Step 5:</span> 执行 /reload-plugins
+<span class="keyword">Step 6:</span> 在 Java 项目根目录启动 Claude Code
+<span class="keyword">Step 7:</span> 验证 LSP 是否生效
+                </div>
+            </div>
+            <div class="reveal">
+                <p><strong>无论哪个平台，推荐流程一致。</strong>接下来我们看看每个平台的具体步骤。</p>
+            </div>
+        </div>
+        <span class="slide-number">06</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 7: Linux 安装
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>Linux 安装步骤<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <h3>第 1 步：安装 JDK</h3>
+                <div class="code-block">
+<span class="prompt">sudo apt update && sudo apt install -y openjdk-21-jdk
+java -version</span>
+                </div>
+            </div>
+            <div class="reveal">
+                <h3>第 2 步：安装 jdtls</h3>
+                <div class="code-block">
+<span class="prompt">sudo apt install -y jdtls
+which jdtls</span>
+                </div>
+            </div>
+            <div class="reveal">
+                <p><strong>第 3 步：</strong>如果仓库没有 jdtls，手动安装（详见完整报告）</p>
+                <p><strong>第 4 步：</strong>在 Claude Code 中搜索并安装 <code>jdtls-lsp</code>，然后执行 <code>/reload-plugins</code></p>
+            </div>
+        </div>
+        <span class="slide-number">07</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 8: macOS 安装
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>macOS 安装步骤<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <h3>第 1 步：安装 JDK</h3>
+                <div class="code-block">
+<span class="prompt">brew install openjdk@21
+echo 'export PATH="$(brew --prefix)/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc</span>
+                </div>
+            </div>
+            <div class="reveal">
+                <h3>第 2 步：安装 jdtls</h3>
+                <div class="code-block">
+<span class="prompt">brew install jdtls
+which jdtls</span>
+                </div>
+            </div>
+            <div class="reveal">
+                <p><strong>第 3 步：</strong>如果需要，手动安装（详见完整报告）</p>
+                <p><strong>第 4 步：</strong>在 Claude Code 中安装 <code>jdtls-lsp</code>，然后 <code>/reload-plugins</code></p>
+            </div>
+        </div>
+        <span class="slide-number">08</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 9: Windows 安装
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>Windows 安装步骤<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <h3>第 1 步：安装 JDK</h3>
+                <div class="code-block">
+<span class="prompt">winget install Microsoft.OpenJDK.21</span>
+                </div>
+            </div>
+            <div class="reveal">
+                <h3>第 2 步：手动安装 jdtls</h3>
+                <p>下载并解压 jdtls 到 <code>%USERPROFILE%\tools\jdtls</code></p>
+            </div>
+            <div class="reveal">
+                <h3>第 3 步：创建 jdtls.cmd</h3>
+                <p>创建启动脚本（详见完整报告）</p>
+            </div>
+            <div class="reveal">
+                <h3>第 4 步：加入 PATH</h3>
+                <div class="code-block">
+<span class="function">[Environment]::SetEnvironmentVariable</span>(<span class="string">"Path"</span>, 
+  <span class="string">$env:Path + ";$HOME\bin"</span>, <span class="string">"User"</span>)
+                </div>
+            </div>
+        </div>
+        <span class="slide-number">09</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 10: 验证是否成功
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>验证是否成功<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <h3>查看插件状态：</h3>
+                <div class="code-block">
+<span class="prompt">/plugin</span>
+                </div>
+                <p>确认 <code>jdtls-lsp</code> 是否启用，检查是否有 <code>Executable not found in $PATH</code> 错误。</p>
+            </div>
+            <div class="reveal">
+                <h3>功能测试：</h3>
+                <ul class="bullet-list">
+                    <li>"找一下 <code>UserService</code> 的定义"</li>
+                    <li>"列出 <code>OrderController</code> 的所有引用"</li>
+                    <li>"看看当前工程有哪些 Java 类型错误"</li>
+                    <li>"找一下这个接口有哪些实现类"</li>
+                </ul>
+            </div>
+            <div class="reveal">
+                <p style="color: var(--terminal-green);"><strong>✅ 如果这些操作明显比纯文本搜索更准，说明 LSP 已经生效。</strong></p>
+            </div>
+        </div>
+        <span class="slide-number">10</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 11: 常见问题排查
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>常见问题排查<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <div class="highlight-box">
+                    <p><strong>问题 1：Executable not found in $PATH</strong></p>
+                    <p>检查 <code>which jdtls</code> 或 <code>where.exe jdtls</code> 是否有输出，确保 jdtls 命令可以正常执行。</p>
+                </div>
+            </div>
+            <div class="reveal">
+                <div class="highlight-box">
+                    <p><strong>问题 2：插件装了但感觉没生效</strong></p>
+                    <p>执行 <code>/reload-plugins</code>，在 <code>/plugin</code> 中查看状态和错误信息。</p>
+                </div>
+            </div>
+            <div class="reveal">
+                <div class="highlight-box">
+                    <p><strong>问题 3：能打开项目项目，但找定义不够准</strong></p>
+                    <p>确认在项目根目录启动（包含 pom.xml 或 build.gradle），检查 Maven/配置是否完整。</p>
+                </div>
+            </div>
+        </div>
+        <span class="slide-number">11</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 12: 最佳实践建议
+         =========================================== -->
+    <section class="slide">
+">
+        <div class="slide-content">
+            <div class="reveal">
+                <h2>最佳实践建议<span class="cursor"></span></h2>
+            </div>
+            <div class="reveal">
+                <ul class="bullet-list">
+                    <li><strong>优先走官方路径：</strong>不要手写 .lsp.json，直接用官方 jdtls-lsp + jdtls</li>
+                    <li><strong>确保 jdtls 稳定：</strong>jdtls --help 必须能正常执行</li>
+                    <li><strong>在项目根目录启动：</strong>多模块项目在 workspace 根目录启动</li>
+                    <li><strong>保证项目健康：</strong>先让项目能正常构建，LSP 诊断质量会更好</li>
+                </ul>
+            </div>
+            <div class="reveal" style="margin-top: var(--content-gap);">
+                <div class="highlight-box">
+                    <p><strong>一句话总结：</strong>LSP 把 Claude Code 从聪明的代码阅读者升级为接上了 IDE 代码智能的工程助手。</p>
+                </div>
+            </div>
+        </div>
+        <span class="slide-number">12</span>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 13: 结束页
+         =========================================== -->
+    <section class="slide">
+        <div class="slide-content" style="text-align: center;">
+            <div class="reveal">
+                <h1 style="font-size: clamp(2rem, 6vw, 4rem);">🎉<span class="cursor"></span></h1>
+            </div>
+            <div class="reveal">
+                <h2>Claude Code Java LSP</h2>
+            </div>
+            <div class="reveal">
+                <p style="font-size: clamp(1rem, 2vw, 1.5rem); color: var(--text-primary);">
+                    让你的 AI 助手更懂 Java
+                </p>
+            </div>
+            <div class="reveal" style="margin-top: var(--content-gap);">
+                <p>完整报告位置：<br><code>~/.openclaw/shared-space/report/claude-code-java-lsp-guide-2026-04-04.md</code></p>
+            </div>
+        </div>
+        <span class="slide-number">13</span>
+    </section>
+
+    <!-- ===========================================
+         JAVASCRIPT: SLIDE CONTROLLER
+         =========================================== -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const options = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.5
+                };
+
+                this.observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const index = Array.from(this.slides).indexOf(entry.target);
+                            if (index !== -1) {
+                                this.currentSlide = index;
+                                this.updateNavDots();
+                            }
+                        }
+                    });
+                }, options);
+
+                this.slides.forEach(slide => {
+                    this.observer.observe(slide);
+                });
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowRight':
+                        case ' ':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide + 1);
+                            break;
+                        case 'ArrowLeft':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide - 1);
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.slides.length - 1);
+                            break;
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartX = 0;
+                let touchEndX = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                }, { passive: true });
+
+                this.handleSwipe = () => {
+                    const diff = touchStartX - touchEndX;
+                    const threshold = 50;
+
+                    if (diff > threshold) {
+                        this.goToSlide(this.currentSlide + 1);
+                    } else if (diff < -threshold) {
+                        this.goToSlide(this.currentSlide - 1);
+                    }
+                };
+            }
+
+            setupProgressBar() {
+                // Progress bar is optional, not implemented for this theme
+            }
+
+            setupNavDots() {
+                const navDots = document.querySelector('.nav-dots');
+                
+                this.slides.forEach((_, index) => {
+                    const button = document.createElement('button');
+                    button.addEventListener('click', () => {
+                        this.goToSlide(index);
+                    });
+                    navDots.appendChild(button);
+                });
+
+                this.updateNavDots();
+            }
+
+            updateNavDots() {
+                const dots = document.querySelectorAll('.nav-dots button');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            goToSlide(index) {
+                if (index < 0 || index >= this.slides.length) return;
+                
+                this.slides[index].scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Initialize presentation
+        new SlidePresentation();
+    </script>
+</body>
+</html>
