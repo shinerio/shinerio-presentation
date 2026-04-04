@@ -1,3 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PRESENTATIONS_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$PRESENTATIONS_DIR"
+
+TMP_FILE="$(mktemp)"
+trap 'rm -f "$TMP_FILE"' EXIT
+
+cat > "$TMP_FILE" <<'EOF'
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -56,11 +66,22 @@
         <h1>📊 演示文稿目录</h1>
         <p class="subtitle">shinerio 的在线演示文稿集合</p>
         <ul class="presentation-list">
+EOF
+
+find . -maxdepth 1 -type f -name '*.html' ! -name 'index.html' | sort | while read -r file; do
+    name="$(basename "$file")"
+    slug="${name%.html}"
+    title="$(printf '%s' "$slug" | sed 's/[-_]/ /g')"
+    cat >> "$TMP_FILE" <<EOF
             <li class="presentation-item">
-                <a href="claude-code-java-lsp.html" class="presentation-link">claude code java lsp</a>
-                <p class="presentation-desc">演示文稿文件：claude-code-java-lsp.html</p>
-                <div class="presentation-path">/shinerio-presentation/claude-code-java-lsp.html</div>
+                <a href="$name" class="presentation-link">$title</a>
+                <p class="presentation-desc">演示文稿文件：$name</p>
+                <div class="presentation-path">/shinerio-presentation/$name</div>
             </li>
+EOF
+done
+
+cat >> "$TMP_FILE" <<'EOF'
         </ul>
         <div class="footer">
             <p>GitHub Pages 自动发布 · <a href="https://github.com/shinerio/shinerio-presentation">源码仓库</a></p>
@@ -68,3 +89,7 @@
     </div>
 </body>
 </html>
+EOF
+
+mv "$TMP_FILE" index.html
+echo "index.html 已更新"
