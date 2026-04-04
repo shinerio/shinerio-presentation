@@ -1,6 +1,6 @@
 # Presentations Repository
 
-这个目录用于存放所有演示文稿，自动部署到 GitHub Pages。
+这个目录用于存放所有演示文稿，通过 GitHub Actions 自动部署到 GitHub Pages。
 
 ## 在线访问
 
@@ -12,21 +12,33 @@
 
 ## 如何添加新演示文稿
 
-1. **将 HTML 文件复制到这个目录**
-   ```bash
-   cp /path/to/new-presentation.html ~/.openclaw/shared-space/presentations/your-presentation.html
-   ```
+**方法 1：使用部署脚本（推荐）**
+```bash
+~/.openclaw/shared-space/presentations/deploy.sh /path/to/presentation.html "演示文稿描述"
+```
 
-2. **提交并推送**
-   ```bash
-   cd ~/.openclaw/shared-space/presentations
-   git add your-presentation.html
-   git commit -m "Add your presentation"
-   git push origin gh-pages
-   ```
+**方法 2：手动操作**
+```bash
+# 1. 复制 HTML 文件
+cp /path/to/presentation.html ~/.openclaw/shared-space/presentations/your-presentation.html
+
+# 2. 提交并（推送到 main 分支）
+cd ~/.openclaw/shared-space/presentations
+git add your-presentation.html
+git commit -m "Add your presentation"
+git push origin main
+```
 
 3. **等待 1-2分钟，访问在线地址**
    http://shinerio.site/shinerio-presentation/your-presentation.html
+
+## 自动部署机制
+
+- **Git 仓库：** https://github.com/shinerio/shinerio-presentation
+- **主分支：** `main` （存放所有 HTML 文件 + deploy.yml）
+- **GitHub Actions：** 推送到 `main` 分支后自动触发部署
+- **部署目标：** GitHub Pages
+- **构建时间：** 通常 1-2 分钟
 
 ## 命名建议
 
@@ -41,10 +53,15 @@
 
 ```
 ~/.openclaw/shared-space/presentations/
-├── .git/                    # Git 仓库（gh-pages 分支）
-├── README.md                 # 本说明文件
-├── claude-code-java-lsp.html # 示例演示文稿
-└── your-presentation.html     # 你的演示文稿
+├
+── .github/
+│   └── workflows/
+│       └── deploy.yml           # GitHub Actions 配置
+├── .git/
+├── README.md                   # 本说明文件
+├── deploy.sh                   # 部署脚本
+├── index.html                  # 演示文稿列表页
+└── claude-code-java-lsp.html    # 示例演示文稿
 ```
 
 ## 常用命令
@@ -61,18 +78,18 @@ ls *.html
 cp new-file.html existing-file.html
 git add existing-file.html
 git commit -m "Update existing presentation"
-git push origin gh-pages
+git push origin main
 
 # 删除某个演示文稿
 rm unwanted.html
 git add unwanted.html
 git commit -m "Remove unwanted presentation"
-git push origin gh-pages
+git push origin main
 ```
 
 ## 技术细节
 
-- **Git 仓库：** https://github.com/shinerio/shinerio-presentation
-- **部署分支：** gh-pages
-- **自动部署：** 推送到 gh-pages 分支后自动触发 GitHub Pages 构建
-- **构建时间：** 通常 1-2 分钟
+- **工作流：** `.github/workflows/deploy.yml`
+- **触发条件：** 推送到 `main` 分支
+- **部署方式：** 使用 `actions/upload-pages-artifact` + `actions/deploy-pages`
+- **权限要求：** `pages: write`, `contents: read`
