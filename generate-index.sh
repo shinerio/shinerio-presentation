@@ -161,10 +161,7 @@ cat > "$TMP_FILE" <<'EOF'
 </head>
 <body>
     <div class="container">
-        <section class="hero">
-            <h1>Presentation<br>Index</h1>
-            <p class="subtitle">shinerio 的演示文稿目录。每一张卡片都可直接点击跳转到对应演示页面。</p>
-        </section>
+        <section class="hero"></section>
         <ul class="presentation-list">
 EOF
 
