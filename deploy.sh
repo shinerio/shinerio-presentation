@@ -2,6 +2,8 @@
 set -euo pipefail
 
 PRESENTATIONS_DIR="$HOME/.openclaw/shared-space/presentations"
+PAGES_BRANCH="gh-pages"
+BASE_URL="http://shinerio.site/shinerio-presentation"
 
 if [ $# -lt 1 ]; then
     echo "用法: $0 <html文件> [提交说明]"
@@ -20,22 +22,31 @@ fi
 FILENAME="$(basename "$HTML_FILE")"
 TARGET="$PRESENTATIONS_DIR/$FILENAME"
 
-cp "$HTML_FILE" "$TARGET"
-
 cd "$PRESENTATIONS_DIR"
+
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$CURRENT_BRANCH" != "$PAGES_BRANCH" ]; then
+    git checkout "$PAGES_BRANCH"
+fi
+
+git pull --ff-only origin "$PAGES_BRANCH"
+cp "$HTML_FILE" "$TARGET"
+chmod +rw "$TARGET" || true
+
 ./generate-index.sh
 
 git add "$FILENAME" index.html generate-index.sh deploy.sh README.md
 if git diff --cached --quiet; then
     echo "没有变化，无需部署"
-    echo "链接: http://shinerio.site/shinerio-presentation/$FILENAME"
+    echo "目录页: $BASE_URL/"
+    echo "演示链接: $BASE_URL/$FILENAME"
     exit 0
 fi
 
 git commit -m "$COMMIT_MSG"
-git push origin main
+git push origin "$PAGES_BRANCH"
 
-echo "部署已提交"
-echo "目录页: http://shinerio.site/shinerio-presentation/"
-echo "演示链接: http://shinerio.site/shinerio-presentation/$FILENAME"
+echo "部署已提交到 $PAGES_BRANCH"
+echo "目录页: $BASE_URL/"
+echo "演示链接: $BASE_URL/$FILENAME"
 echo "通常 1-2 分钟内生效"
