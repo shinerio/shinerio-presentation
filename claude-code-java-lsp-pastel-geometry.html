@@ -491,6 +491,125 @@
       transition: width 0.25s ease;
     }
 
+    .fab, .study-toggle {
+      position: fixed;
+      z-index: 70;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      box-shadow: 0 12px 30px rgba(56,72,88,0.14);
+      font-family: var(--font-body);
+      font-weight: 700;
+    }
+
+    .fab {
+      left: 18px;
+      bottom: 18px;
+      width: 52px;
+      height: 52px;
+      background: var(--pill-violet);
+      color: #fff;
+      font-size: 1.1rem;
+    }
+
+    .study-toggle {
+      right: 18px;
+      bottom: 18px;
+      padding: 0.85rem 1rem;
+      background: #fff;
+      color: var(--accent-dark);
+      font-size: 0.85rem;
+    }
+
+    .toc-panel {
+      position: fixed;
+      left: 18px;
+      bottom: 82px;
+      width: min(320px, 88vw);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: 0 18px 44px rgba(56,72,88,0.16);
+      z-index: 69;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: all 0.25s ease;
+    }
+
+    .toc-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .toc-panel h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+    .toc-list { display: grid; gap: 0.45rem; }
+    .toc-list button {
+      border: none;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      text-align: left;
+      padding: 0.65rem 0.8rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .study-mode .memory-point {
+      display: block;
+    }
+
+    .memory-point {
+      display: none;
+      margin-top: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 14px;
+      background: rgba(168, 212, 196, 0.22);
+      color: var(--accent-dark);
+      font-size: var(--small-size);
+      font-weight: 600;
+    }
+
+    .quiz-grid {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .quiz-card {
+      background: #fff;
+      border: 1px solid rgba(124,106,173,0.12);
+      border-radius: 18px;
+      padding: 1rem;
+    }
+
+    .quiz-card button {
+      margin-top: 0.7rem;
+      border: none;
+      background: var(--pill-lavender);
+      color: #fff;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .quiz-answer {
+      display: none;
+      margin-top: 0.8rem;
+      padding: 0.8rem;
+      border-radius: 14px;
+      background: rgba(155,141,196,0.12);
+      color: var(--accent-dark);
+      font-size: var(--small-size);
+    }
+
+    .quiz-card.open .quiz-answer { display: block; }
+
     .reveal {
       opacity: 0;
       transform: translateY(24px);
@@ -518,6 +637,12 @@
 <body>
   <div class="progress-bar" aria-hidden="true"></div>
   <nav class="nav-dots" aria-label="幻灯片导航"></nav>
+  <button class="fab" id="tocToggle" aria-label="打开目录">☰</button>
+  <button class="study-toggle" id="studyToggle" aria-label="切换学习模式">学习模式：关</button>
+  <aside class="toc-panel" id="tocPanel" aria-label="目录">
+    <h3>快速跳转</h3>
+    <div class="toc-list" id="tocList"></div>
+  </aside>
 
   <!-- ===========================================
        SLIDE 1: HERO
@@ -568,6 +693,7 @@
         </div>
         <div class="quote-card reveal" style="margin-top: var(--content-gap);">
           <p class="lede" style="font-size: clamp(1rem,1.8vw,1.35rem);">一句话：不开 LSP 时，Claude 更像聪明的代码阅读者；开了 LSP 后，它更像接上 IDE 智能内核的工程助手。</p>
+          <div class="memory-point">记忆点：LSP 的本质不是“更会搜索”，而是“更会理解语义关系”。</div>
         </div>
       </div>
     </div>
@@ -627,6 +753,7 @@
 → jdtls 分析 workspace
 → Claude Code 请求定义 / 引用 / 诊断
 → 用于导航、分析与编辑</div>
+            <div class="memory-point">记忆点：真正干活的是系统里的 <code>jdtls</code>，插件只是桥，Claude Code 则是请求方。</div>
           </div>
         </div>
       </div>
@@ -774,11 +901,28 @@ which jdtls</div></div>
   <section class="slide">
     <div class="slide-shell">
       <div class="pill-rail decorative"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="slide-topbar"><div class="section-chip">End</div><div class="slide-no">11 / 11</div></div>
+      <div class="slide-topbar"><div class="section-chip">Learn / Self Test</div><div class="slide-no">11 / 11</div></div>
       <div class="slide-content" style="text-align:left;">
-        <div class="reveal"><h1>Claude Code<br>Java LSP 指南</h1></div>
-        <div class="reveal"><p class="lede">正式版演示已按 Pastel Geometry 风格重做。后续如果你要，我可以继续把内容再压缩成更像 conference talk 的版本，而不是知识型 slide deck。</p></div>
-        <div class="reveal footer-note">报告来源：claude-code-java-lsp-guide-2026-04-04.md</div>
+        <div class="reveal"><h2>学完别急着走，自己测一下</h2></div>
+        <div class="reveal"><p class="lede">这页是交互学习版：你可以先自己回答，再点开答案，快速巩固核心概念。</p></div>
+        <div class="quiz-grid">
+          <div class="quiz-card reveal">
+            <h3>问题 1：为什么 Java 场景下，Claude Code 特别需要 LSP？</h3>
+            <button type="button" class="quiz-toggle">显示答案</button>
+            <div class="quiz-answer">因为 Java 是强类型、多模块、工程化程度高的语言。纯文本搜索不够稳，而 LSP 能提供定义、引用、诊断、实现类等语义级信息。</div>
+          </div>
+          <div class="quiz-card reveal">
+            <h3>问题 2：官方推荐路径是什么？</h3>
+            <button type="button" class="quiz-toggle">显示答案</button>
+            <div class="quiz-answer">直接使用官方 <code>jdtls-lsp</code> 插件 + 系统里的 <code>jdtls</code>，而不是自己手写 <code>.lsp.json</code>。</div>
+          </div>
+          <div class="quiz-card reveal">
+            <h3>问题 3：如果插件装了但感觉没生效，先做哪两件事？</h3>
+            <button type="button" class="quiz-toggle">显示答案</button>
+            <div class="quiz-answer">先执行 <code>/reload-plugins</code>，再到 <code>/plugin</code> 查看状态和错误信息。</div>
+          </div>
+        </div>
+        <div class="reveal footer-note">报告来源：claude-code-java-lsp-guide-2026-04-04.md · 快捷键：← → 翻页，左下角 ☰ 打开目录，右下角切学习模式。</div>
       </div>
     </div>
   </section>
@@ -790,11 +934,19 @@ which jdtls</div></div>
         this.currentSlide = 0;
         this.nav = document.querySelector('.nav-dots');
         this.progress = document.querySelector('.progress-bar');
+        this.tocList = document.querySelector('#tocList');
+        this.tocPanel = document.querySelector('#tocPanel');
+        this.tocToggle = document.querySelector('#tocToggle');
+        this.studyToggle = document.querySelector('#studyToggle');
+        this.studyMode = false;
         this.setupIntersectionObserver();
         this.setupKeyboardNav();
         this.setupTouchNav();
         this.setupWheelNav();
         this.setupNavDots();
+        this.setupToc();
+        this.setupStudyMode();
+        this.setupQuiz();
       }
 
       setupIntersectionObserver() {
@@ -866,6 +1018,41 @@ which jdtls</div></div>
         });
         this.updateNavDots();
         this.updateProgressBar();
+      }
+
+      setupToc() {
+        this.slides.forEach((slide, index) => {
+          const title = slide.querySelector('h2, h1')?.textContent?.replace(/\s+/g, ' ').trim() || `第 ${index + 1} 页`;
+          const btn = document.createElement('button');
+          btn.textContent = `${index + 1}. ${title}`;
+          btn.addEventListener('click', () => {
+            this.goToSlide(index);
+            this.tocPanel.classList.remove('open');
+          });
+          this.tocList.appendChild(btn);
+        });
+
+        this.tocToggle.addEventListener('click', () => {
+          this.tocPanel.classList.toggle('open');
+        });
+      }
+
+      setupStudyMode() {
+        this.studyToggle.addEventListener('click', () => {
+          this.studyMode = !this.studyMode;
+          document.body.classList.toggle('study-mode', this.studyMode);
+          this.studyToggle.textContent = `学习模式：${this.studyMode ? '开' : '关'}`;
+        });
+      }
+
+      setupQuiz() {
+        document.querySelectorAll('.quiz-toggle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const card = btn.closest('.quiz-card');
+            card.classList.toggle('open');
+            btn.textContent = card.classList.contains('open') ? '收起答案' : '显示答案';
+          });
+        });
       }
 
       updateNavDots() {
