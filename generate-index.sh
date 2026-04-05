@@ -14,12 +14,14 @@ cat > "$TMP_FILE" <<'EOF'
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>演示文稿 - shinerio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg: #050505;
-            --bg-soft: #0f0f0f;
             --text: #f5f5f5;
             --muted: rgba(255,255,255,0.62);
             --line: rgba(255,255,255,0.12);
@@ -45,22 +47,33 @@ cat > "$TMP_FILE" <<'EOF'
         }
 
         .hero {
-            margin-bottom: clamp(28px, 4vw, 48px);
+            margin-bottom: clamp(28px, 4vw, 44px);
+        }
+
+        .hero-title {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
         }
 
         h1 {
-            font-size: clamp(2rem, 6vw, 4.2rem);
-            line-height: 0.96;
-            letter-spacing: -0.05em;
-            margin-bottom: 0.8rem;
+            font-size: clamp(2.2rem, 6vw, 4.8rem);
+            line-height: 0.95;
+            letter-spacing: -0.06em;
             font-weight: 800;
+            max-width: 12ch;
         }
 
-        .subtitle {
-            max-width: 44rem;
-            color: var(--muted);
-            font-size: clamp(0.95rem, 1.8vw, 1.15rem);
-            line-height: 1.7;
+        .hero-signature {
+            align-self: flex-end;
+            margin-top: -0.15rem;
+            font-family: 'Allura', cursive;
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: rgba(255,255,255,0.78);
+            line-height: 1;
+            transform: rotate(-4deg);
+            text-shadow: 0 4px 18px rgba(255,255,255,0.08);
+            padding-right: clamp(6px, 1vw, 12px);
         }
 
         .presentation-list {
@@ -156,12 +169,18 @@ cat > "$TMP_FILE" <<'EOF'
         @media (max-width: 640px) {
             body { padding: 18px; }
             .presentation-meta { align-items: flex-start; }
+            .hero-signature { transform: rotate(-2deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <section class="hero"></section>
+        <section class="hero">
+            <div class="hero-title">
+                <h1>Personal Presentations</h1>
+                <div class="hero-signature">by shinerio</div>
+            </div>
+        </section>
         <ul class="presentation-list">
 EOF
 
