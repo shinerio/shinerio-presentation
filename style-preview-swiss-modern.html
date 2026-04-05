@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style Preview B - Swiss Modern</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Nunito:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-white: #ffffff;
+            --text-dark: #000000;
+            --accent-red: #ff3300;
+            --grid-line: rgba(0, 0, 0, 0.05);
+            --title
+-size: clamp(1.75rem, 5vw, 3.5rem);
+            --slide-padding: clamp(2rem, 5vw, 5rem);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-white);
+            overflow-x: hidden;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .grid-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: left;
+            max-width: 900px;
+            width: 100%;
+            padding: var(--slide-padding);
+        }
+        .number-badge {
+            position: absolute;
+            top: var(--slide-padding);
+            left: var(--slide-padding);
+            font-family: 'Archivo', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            color: var(--accent-red);
+            line-height: 1;
+        }
+        h1 {
+            font-family: 'Archivo', sans-serif;
+            font-size: var(--title-size);
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1.1;
+            margin-bottom: clamp(1rem, 2vw, 1.5rem);
+            margin-top: clamp(4rem, 10vw, 8rem);
+        }
+        .subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            font-weight: 400;
+            color: var(--text-dark);
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+        .accent-line {
+            width: 120px;
+            height: 4px;
+            background: var(--accent-red);
+            margin-top: var(--slide-padding);
+        }
+        .style-tag {
+            position: absolute;
+            bottom: var(--slide-padding);
+            right: var(--slide-padding);
+            font-family: 'Archivo', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            border: 2px solid var(--text-dark);
+            padding: 8px 16px;
+        }
+    </style>
+</head>
+<body>
+    <section class="slide">
+        <div class="grid-background"></div>
+        <div class="content">
+            <div class="number-badge">01</div>
+            <h1>Claude Code<br>Java LSP 指南</h1>
+            <p class="subtitle">如何优雅地为 Claude Code 开启 Java 语言智能</p>
+            <div class="accent-line"></div>
+        </div>
+        <div class="style-tag">Swiss Modern</div>
+    </section>
+</body>
+</html>
