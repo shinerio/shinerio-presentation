@@ -57,11 +57,11 @@ cat > "$TMP_FILE" <<'EOF'
         }
 
         h1 {
-            font-size: clamp(2.2rem, 6vw, 4.8rem);
+            font-size: clamp(2rem, 5vw, 4.2rem);
             line-height: 0.95;
             letter-spacing: -0.06em;
             font-weight: 800;
-            max-width: 12ch;
+            white-space: nowrap;
         }
 
         .hero-signature {
