@@ -54,10 +54,10 @@
             --gap-sm:      clamp(0.28rem, 0.7vw, 0.65rem);
 
             --sz-title:    clamp(1.8rem, 5.2vw, 4.5rem);
-            --sz-h2:       clamp(1.15rem, 2.7vw, 2.1rem);
-            --sz-h3:       clamp(0.82rem, 1.6vw, 1.2rem);
-            --sz-body:     clamp(0.72rem, 1.3vw, 0.98rem);
-            --sz-small:    clamp(0.62rem, 0.92vw, 0.8rem);
+            --sz-h2:       clamp(1.38rem, 3.2vw, 2.55rem);
+            --sz-h3:       clamp(1rem, 1.95vw, 1.42rem);
+            --sz-body:     clamp(0.92rem, 1.58vw, 1.16rem);
+            --sz-small:    clamp(0.78rem, 1.16vw, 0.96rem);
 
             --ease-expo:   cubic-bezier(0.16, 1, 0.3, 1);
             --dur:         0.6s;
@@ -103,6 +103,32 @@
 
         .feature-list li, .bullet-list li { font-size: var(--sz-body); line-height: 1.4; }
 
+        .slide:not(.s-title) .slide-content {
+            padding:
+                clamp(5.1rem, 10vh, 7.2rem)
+                var(--slide-pad)
+                clamp(1rem, 2vh, 1.8rem);
+            justify-content: center;
+        }
+
+        .slide:not(.s-title) .slide-content > .stag,
+        .slide:not(.s-title) .slide-content > h2 {
+            position: absolute;
+            left: var(--slide-pad);
+            z-index: 2;
+        }
+
+        .slide:not(.s-title) .slide-content > .stag {
+            top: clamp(1.1rem, 2.4vh, 1.8rem);
+            margin-bottom: 0;
+        }
+
+        .slide:not(.s-title) .slide-content > h2 {
+            top: clamp(2.4rem, 4.8vh, 4rem);
+            width: min(calc(100vw - (var(--slide-pad) * 2) - 3rem), 72rem);
+            margin-bottom: 0;
+        }
+
         img, .image-container { max-width: 100%; max-height: min(50vh, 400px); object-fit: contain; }
 
         @media (max-height: 700px) {
@@ -135,6 +161,17 @@
 
         @media (max-width: 600px) {
             :root { --sz-title: clamp(1.25rem, 7vw, 2.5rem); }
+        }
+
+        @media (max-width: 768px) {
+            .slide:not(.s-title) .slide-content {
+                padding-top: clamp(4.8rem, 9vh, 6.4rem);
+                padding-bottom: clamp(0.9rem, 1.8vh, 1.5rem);
+            }
+
+            .slide:not(.s-title) .slide-content > h2 {
+                width: calc(100vw - (var(--slide-pad) * 2));
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1516,23 +1553,23 @@
             <div class="q-list">
                 <div class="q-item reveal">
                     <div class="q-num">1</div>
-                    <div class="q-text"><strong>规则该限定到多细致？</strong> AI review 实测只能发现约 40% 的真实问题。规则过于细致，则漏报多，如果过于宽泛则又会导致噪声淹没信号。团队对这两种错误的容忍度各是多少？</div>
+                    <div class="q-text"><strong>规则制定的细致程度是什么？</strong> AI review 实测只能发现约 40% 的真实问题。规则过于细致，则会过拟合，漏报多；过于宽泛则又会导致噪声淹没信号。团队对这两种错误的容忍度各是多少？</div>
                 </div>
                 <div class="q-item reveal">
                     <div class="q-num">2</div>
-                    <div class="q-text"><strong>Review的维度有哪些？</strong> 如何区分Review和开发的界限，review成本和收益如何平衡？</div>
+                    <div class="q-text"><strong>Review的维度有哪些？</strong> 如何区分Implement和Review阶段的界限，review成本和收益如何平衡？</div>
                 </div>
                 <div class="q-item reveal">
                     <div class="q-num">3</div>
-                    <div class="q-text"><strong>本地和云端如何分工？</strong> 本地通过AI Agent触发skill检视和远端sophia根据MR自动触发的审计责任边界是什么？</div>
+                    <div class="q-text"><strong>本地和云端如何分工？</strong> 本地通过AI Agent触发skill检视和远端PR自动触发（sophia）的责任边界是什么？</div>
                 </div>
                 <div class="q-item reveal">
                     <div class="q-num">4</div>
-                    <div class="q-text"><strong>规则文件如何避免变成"墓地"？</strong> AGENTS.md或REVIEW.md 写了很多规则，但规则腐烂速度往往快于维护速度。instruction owner 机制如何保证不流于形式？</div>
+                    <div class="q-text"><strong>规则文件如何避免变成"墓地"？</strong> AGENTS.md或REVIEW.md写了很多规则，但规则腐烂速度往往快于维护速度。instruction owner 机制如何保证不流于形式？</div>
                 </div>
                 <div class="q-item reveal">
                     <div class="q-num">5</div>
-                    <div class="q-text"><strong>人于AI分工的边界在哪，资深 reviewer 省下来的时间去哪了？</strong> AI 做掉 70% 基础扫描后，资深工程师会真的转向架构或逻辑判断，还是被更多 PR 填满？</div>
+                    <div class="q-text"><strong>人和AI的责任边界在哪，资深reviewer应该做什么？</strong> AI做掉70%基础扫描后，资深工程师是否真的转向架构或逻辑问题的识别，还是被更多PR填满？</div>
                 </div>
             </div>
         </div>
