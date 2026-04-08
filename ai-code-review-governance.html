@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业 AI 代码 Review 能力治理方案</title>
+
+    <!-- Google Fonts: Archivo Black + IBM Plex Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===================================================
+           CSS CUSTOM PROPERTIES — Light "Technical Blueprint" theme
+           Inspired by engineering documents and Swiss precision design
+           =================================================== */
+        :root {
+            --bg-primary:    #ede9e2;
+            --bg-card:       #ffffff;
+            --bg-card-alt:   #f6f3ee;
+
+            --ink:           #1a1814;
+            --ink-mid:       #3a3630;
+            --ink-light:     #7a746c;
+            --ink-faint:     #b8b2a8;
+
+            --blue:          #1b3f82;
+            --blue-mid:      #2d5bc4;
+            --blue-light:    rgba(27, 63, 130, 0.09);
+            --blue-hover:    rgba(27, 63, 130, 0.15);
+
+            --orange:        #c85a00;
+            --orange-light:  rgba(200, 90, 0, 0.1);
+            --red:           #b91c1c;
+            --red-light:     rgba(185, 28, 28, 0.1);
+            --green:         #166534;
+            --green-light:   rgba(22, 101, 52, 0.1);
+            --teal:          #0f766e;
+            --teal-light:    rgba(15, 118, 110, 0.09);
+
+            --border-dim:    rgba(27, 63, 130, 0.13);
+            --border-mid:    rgba(27, 63, 130, 0.3);
+            --shadow-sm:     0 1px 4px rgba(26, 24, 20, 0.08), 0 1px 2px rgba(26, 24, 20, 0.05);
+            --shadow-md:     0 4px 16px rgba(26, 24, 20, 0.1), 0 2px 6px rgba(26, 24, 20, 0.06);
+
+            --font-display: 'Archivo Black', 'PingFang SC', sans-serif;
+            --font-body:    'IBM Plex Sans', 'PingFang SC', sans-serif;
+            --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+
+            --slide-pad:   clamp(1.5rem, 5vw, 5rem);
+            --gap-lg:      clamp(0.8rem, 2vw, 2rem);
+            --gap-md:      clamp(0.5rem, 1.2vw, 1.2rem);
+            --gap-sm:      clamp(0.28rem, 0.7vw, 0.65rem);
+
+            --sz-title:    clamp(1.8rem, 5.2vw, 4.5rem);
+            --sz-h2:       clamp(1.15rem, 2.7vw, 2.1rem);
+            --sz-h3:       clamp(0.82rem, 1.6vw, 1.2rem);
+            --sz-body:     clamp(0.72rem, 1.3vw, 0.98rem);
+            --sz-small:    clamp(0.62rem, 0.92vw, 0.8rem);
+
+            --ease-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+            --dur:         0.6s;
+        }
+
+        /* ===================================================
+           RESET
+           =================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        ul { list-style: none; }
+
+        /* ===================================================
+           VIEWPORT BASE — mandatory
+           =================================================== */
+        html, body { height: 100%; overflow-x: hidden; }
+        html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-pad);
+        }
+
+        .card, .container, .content-box {
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+        }
+
+        .feature-list li, .bullet-list li { font-size: var(--sz-body); line-height: 1.4; }
+
+        img, .image-container { max-width: 100%; max-height: min(50vh, 400px); object-fit: contain; }
+
+        @media (max-height: 700px) {
+            :root {
+                --slide-pad: clamp(0.75rem, 3vw, 2rem);
+                --gap-lg:    clamp(0.4rem, 1.2vw, 1rem);
+                --sz-title:  clamp(1.25rem, 4.5vw, 2.5rem);
+                --sz-h2:     clamp(1rem, 2.6vw, 1.7rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            :root {
+                --slide-pad: clamp(0.5rem, 2vw, 1.25rem);
+                --gap-lg:    clamp(0.3rem, 1vw, 0.75rem);
+                --sz-title:  clamp(1.1rem, 4vw, 2rem);
+                --sz-body:   clamp(0.66rem, 1.05vw, 0.88rem);
+            }
+            .nav-dots { display: none; }
+        }
+
+        @media (max-height: 500px) {
+            :root {
+                --slide-pad: clamp(0.4rem, 1.5vw, 0.8rem);
+                --sz-title:  clamp(1rem, 3.5vw, 1.5rem);
+                --sz-h2:     clamp(0.88rem, 2.4vw, 1.22rem);
+                --sz-body:   clamp(0.6rem, 0.88vw, 0.78rem);
+            }
+        }
+
+        @media (max-width: 600px) {
+            :root { --sz-title: clamp(1.25rem, 7vw, 2.5rem); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ===================================================
+           BASE TYPOGRAPHY
+           =================================================== */
+        body { font-family: var(--font-body); background: var(--bg-primary); color: var(--ink); }
+
+        h1 { font-family: var(--font-display); font-size: var(--sz-title); color: var(--ink); line-height: 1.06; }
+        h2 { font-family: var(--font-display); font-size: var(--sz-h2);    color: var(--ink); line-height: 1.2; margin-bottom: var(--gap-lg); }
+        h3 { font-family: var(--font-display); font-size: var(--sz-h3);    color: var(--ink); line-height: 1.3; }
+        p  { font-size: var(--sz-body); line-height: 1.65; color: var(--ink-mid); }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            background: var(--blue-light);
+            color: var(--blue);
+            padding: 0.1em 0.45em;
+            border-radius: 3px;
+            border: 1px solid rgba(27, 63, 130, 0.15);
+        }
+
+        /* ===================================================
+           SLIDE DECORATION — subtle blueprint grid, ink brackets
+           =================================================== */
+        .slide { background: var(--bg-primary); }
+
+        /* Blueprint grid — very subtle */
+        .slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(27, 63, 130, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(27, 63, 130, 0.045) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Bottom-right bracket (ink) */
+        .slide::after {
+            content: '';
+            position: absolute;
+            bottom: clamp(1rem, 2.5vw, 1.75rem);
+            right: clamp(1.25rem, 3vw, 2.5rem);
+            width: clamp(20px, 3.2vw, 32px);
+            height: clamp(20px, 3.2vw, 32px);
+            border-right: 1.5px solid rgba(27, 63, 130, 0.3);
+            border-bottom: 1.5px solid rgba(27, 63, 130, 0.3);
+            pointer-events: none;
+        }
+
+        /* Top-left bracket */
+        .bracket-tl {
+            position: absolute;
+            top: clamp(0.75rem, 2vw, 1.25rem);
+            left: clamp(0.75rem, 2vw, 1.25rem);
+            width: clamp(20px, 3.2vw, 32px);
+            height: clamp(20px, 3.2vw, 32px);
+            border-top: 1.5px solid rgba(27, 63, 130, 0.3);
+            border-left: 1.5px solid rgba(27, 63, 130, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Slide number */
+        .snum {
+            position: absolute;
+            bottom: clamp(0.9rem, 2vw, 1.5rem);
+            left: var(--slide-pad);
+            font-family: var(--font-mono);
+            font-size: var(--sz-small);
+            color: var(--ink-faint);
+            letter-spacing: 0.1em;
+            z-index: 2;
+        }
+
+        /* ===================================================
+           PROGRESS BAR & NAV DOTS
+           =================================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--blue-mid));
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.35s ease;
+            box-shadow: 0 0 6px rgba(27, 63, 130, 0.4);
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: clamp(0.75rem, 2vw, 1.5rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(5px, 1vh, 9px);
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--ink-faint);
+            cursor: pointer;
+            border: none;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+        .nav-dot.active {
+            background: var(--blue);
+            box-shadow: 0 0 0 2px rgba(27, 63, 130, 0.2);
+            transform: scale(1.5);
+        }
+
+        /* ===================================================
+           ANIMATION SYSTEM
+           =================================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity var(--dur) var(--ease-expo), transform var(--dur) var(--ease-expo);
+        }
+        .slide.visible .reveal { opacity: 1; transform: translateY(0); }
+
+        .reveal:nth-child(1) { transition-delay: 0.04s; }
+        .reveal:nth-child(2) { transition-delay: 0.10s; }
+        .reveal:nth-child(3) { transition-delay: 0.16s; }
+        .reveal:nth-child(4) { transition-delay: 0.22s; }
+        .reveal:nth-child(5) { transition-delay: 0.28s; }
+        .reveal:nth-child(6) { transition-delay: 0.34s; }
+        .reveal:nth-child(7) { transition-delay: 0.40s; }
+        .reveal:nth-child(8) { transition-delay: 0.46s; }
+
+        .sg > *:nth-child(1) { transition-delay: 0.07s; }
+        .sg > *:nth-child(2) { transition-delay: 0.14s; }
+        .sg > *:nth-child(3) { transition-delay: 0.21s; }
+        .sg > *:nth-child(4) { transition-delay: 0.28s; }
+        .sg > *:nth-child(5) { transition-delay: 0.35s; }
+        .sg > *:nth-child(6) { transition-delay: 0.42s; }
+        .sg > *:nth-child(7) { transition-delay: 0.49s; }
+
+        /* ===================================================
+           REUSABLE COMPONENTS
+           =================================================== */
+
+        /* Section eyebrow tag */
+        .stag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: var(--sz-small);
+            font-weight: 600;
+            color: var(--blue-mid);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: var(--gap-sm);
+        }
+        .stag::before {
+            content: '';
+            display: inline-block;
+            width: clamp(14px, 2.2vw, 22px);
+            height: 1.5px;
+            background: var(--blue-mid);
+        }
+
+        /* Accent rule */
+        .aline {
+            width: clamp(32px, 5vw, 56px);
+            height: 3px;
+            background: var(--blue);
+            margin: var(--gap-sm) 0;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: clamp(5px, 0.8vw, 8px);
+            padding: clamp(0.7rem, 1.8vw, 1.4rem);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.25s, transform 0.25s;
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+
+        /* Callout highlight box */
+        .hbox {
+            background: var(--blue-light);
+            border: 1px solid var(--border-dim);
+            border-left: 3px solid var(--blue);
+            border-radius: 0 6px 6px 0;
+            padding: clamp(0.55rem, 1.1vw, 0.9rem) clamp(0.85rem, 1.7vw, 1.4rem);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18em 0.65em;
+            border-radius: 4px;
+            font-size: var(--sz-small);
+            font-weight: 600;
+            font-family: var(--font-mono);
+            letter-spacing: 0.03em;
+        }
+        .bb { background: var(--blue-light);   color: var(--blue);   border: 1px solid rgba(27,63,130,0.22); }
+        .bo { background: var(--orange-light);  color: var(--orange); border: 1px solid rgba(200,90,0,0.22); }
+        .br { background: var(--red-light);     color: var(--red);    border: 1px solid rgba(185,28,28,0.22); }
+        .bg { background: var(--green-light);   color: var(--green);  border: 1px solid rgba(22,101,52,0.22); }
+        .bt { background: var(--teal-light);    color: var(--teal);   border: 1px solid rgba(15,118,110,0.22); }
+
+        /* Divider */
+        .div { width: 100%; height: 1px; background: var(--border-dim); margin: var(--gap-sm) 0; }
+
+        /* Arrow list */
+        .alist { display: flex; flex-direction: column; gap: clamp(0.26rem, 0.65vh, 0.52rem); }
+        .alist li {
+            font-size: var(--sz-small);
+            color: var(--ink-mid);
+            padding-left: 1.3em;
+            position: relative;
+            line-height: 1.48;
+        }
+        .alist li::before { content: '→'; position: absolute; left: 0; color: var(--blue-mid); font-family: var(--font-mono); }
+
+        /* ===================================================
+           SLIDE 1 — TITLE
+           =================================================== */
+        .s-title { background: var(--bg-primary); }
+
+        /* Large blue accent bar at top */
+        .title-topbar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: clamp(4px, 0.6vh, 6px);
+            background: var(--blue);
+        }
+
+        .title-eyebrow {
+            font-family: var(--font-mono);
+            font-size: var(--sz-small);
+            color: var(--blue-mid);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: var(--gap-sm);
+        }
+
+        .title-h1 {
+            font-family: var(--font-display);
+            font-size: var(--sz-title);
+            line-height: 1.07;
+            color: var(--ink);
+            margin-bottom: var(--gap-lg);
+        }
+
+        .title-h1 em {
+            color: var(--blue);
+            font-style: normal;
+            position: relative;
+        }
+
+        /* Underline decoration on em */
+        .title-h1 em::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0; right: 0;
+            height: 3px;
+            background: var(--orange);
+        }
+
+        .title-desc {
+            font-size: var(--sz-body);
+            color: var(--ink-light);
+            max-width: 58ch;
+            line-height: 1.75;
+        }
+
+        .title-chips { display: flex; gap: 0.55rem; margin-top: var(--gap-md); flex-wrap: wrap; }
+
+        /* Large watermark number */
+        .title-wm {
+            position: absolute;
+            right: calc(-1 * clamp(1rem, 3vw, 3rem));
+            bottom: calc(-1 * clamp(2rem, 6vw, 6rem));
+            font-family: var(--font-display);
+            font-size: clamp(8rem, 20vw, 18rem);
+            color: rgba(27, 63, 130, 0.05);
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* ===================================================
+           PAIN POINTS
+           =================================================== */
+        .pain-list { display: flex; flex-direction: column; gap: clamp(0.42rem, 1.1vh, 0.85rem); margin-top: var(--gap-lg); }
+
+        .pain-item {
+            display: flex;
+            align-items: flex-start;
+            gap: clamp(0.7rem, 1.5vw, 1.2rem);
+            padding: clamp(0.65rem, 1.4vw, 1.1rem);
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.25s;
+        }
+        .pain-item:hover { box-shadow: var(--shadow-md); }
+
+        .pain-n {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 2.7vw, 2rem);
+            color: var(--blue);
+            opacity: 0.22;
+            line-height: 1;
+            flex-shrink: 0;
+            width: clamp(1.8rem, 3.5vw, 2.8rem);
+            text-align: right;
+        }
+        .pain-body h3 { margin-bottom: 0.2rem; color: var(--ink); }
+        .pain-body p  { font-size: var(--sz-small); color: var(--ink-light); }
+
+        /* ===================================================
+           VALUE CARDS (3-col)
+           =================================================== */
+        .vcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-md); margin-top: var(--gap-lg); }
+        @media (max-width: 768px) { .vcards { grid-template-columns: 1fr; } }
+
+        .vcard {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: clamp(0.9rem, 2.2vw, 1.8rem) clamp(0.75rem, 1.8vw, 1.4rem);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+        .vcard::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--blue);
+        }
+        .vcard:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+        .vcard-icon { font-size: clamp(1.4rem, 2.8vw, 2rem); margin-bottom: var(--gap-sm); }
+        .vcard h3   { margin-bottom: var(--gap-sm); color: var(--blue); }
+        .vcard p    { font-size: var(--sz-small); color: var(--ink-light); }
+        .vcard strong { color: var(--blue); }
+
+        /* ===================================================
+           7 DIMENSIONS GRID (3×2)
+           =================================================== */
+        .dim-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.38rem, 0.85vw, 0.65rem);
+            margin-top: var(--gap-md);
+        }
+        @media (max-width: 768px) { .dim-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .dcard {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: clamp(0.52rem, 1.05vw, 0.85rem);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.25s;
+        }
+        .dcard:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .dcard-icon { font-size: clamp(0.95rem, 1.9vw, 1.4rem); margin-bottom: 0.2rem; }
+        .dcard-name { font-family: var(--font-display); font-size: var(--sz-small); color: var(--blue); margin-bottom: 0.12rem; }
+        .dcard-desc { font-size: clamp(0.57rem, 0.83vw, 0.7rem); color: var(--ink-light); line-height: 1.4; }
+        .dcard-ex   { font-size: clamp(0.53rem, 0.73vw, 0.63rem); color: var(--orange); margin-top: 0.12rem; }
+        .dcard-ex.warn { color: var(--ink-faint); }
+
+        /* ===================================================
+           INSTRUCTION LEVELS
+           =================================================== */
+        .lvl-stack { display: flex; flex-direction: column; gap: clamp(0.42rem, 1.1vh, 0.85rem); margin-top: var(--gap-lg); }
+
+        .lvl-item {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-md);
+            padding: clamp(0.65rem, 1.4vw, 1.1rem);
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .lvl-badge {
+            width: clamp(44px, 6.5vw, 60px);
+            height: clamp(44px, 6.5vw, 60px);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: clamp(0.58rem, 1vw, 0.78rem);
+            font-weight: 400;
+            flex-shrink: 0;
+            text-align: center;
+            line-height: 1.25;
+        }
+        .lb-global { background: var(--blue-light); color: var(--blue); border: 1px solid var(--border-dim); }
+        .lb-repo   { background: var(--teal-light);  color: var(--teal); border: 1px solid rgba(15,118,110,0.18); }
+        .lb-path   { background: var(--orange-light); color: var(--orange); border: 1px solid rgba(200,90,0,0.18); }
+
+        .lvl-body h3 { margin-bottom: 0.2rem; color: var(--ink); }
+        .lvl-body p  { font-size: var(--sz-small); color: var(--ink-light); }
+
+        /* ===================================================
+           FIVE PHASES
+           =================================================== */
+        .phases { display: flex; gap: clamp(0.3rem, 0.75vw, 0.55rem); margin-top: var(--gap-lg); align-items: stretch; }
+
+        .ph {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: clamp(0.5rem, 1.1vw, 0.9rem) clamp(0.38rem, 0.9vw, 0.7rem);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.25s;
+        }
+        .ph:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .ph::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .ph:nth-child(1)::after { background: var(--blue); }
+        .ph:nth-child(2)::after { background: var(--teal); }
+        .ph:nth-child(3)::after { background: #7c3aed; }
+        .ph:nth-child(4)::after { background: var(--orange); }
+        .ph:nth-child(5)::after { background: var(--green); }
+
+        .ph-num   { font-family: var(--font-display); font-size: clamp(1.3rem, 2.8vw, 2rem); opacity: 0.1; color: var(--ink); line-height: 1; margin-bottom: 0.3rem; }
+        .ph-title { font-family: var(--font-display); font-size: clamp(0.6rem, 1vw, 0.78rem); color: var(--ink); margin-bottom: 0.25rem; }
+        .ph-desc  { font-size: clamp(0.54rem, 0.8vw, 0.66rem); color: var(--ink-light); line-height: 1.42; flex: 1; }
+
+        /* ===================================================
+           2×2 CARD GRID
+           =================================================== */
+        .twobytwo { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap-md); margin-top: var(--gap-lg); }
+
+        /* ===================================================
+           LOCAL AGENT REVIEW (2-col)
+           =================================================== */
+        .cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); margin-top: var(--gap-lg); }
+
+        .cmd-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: clamp(0.8rem, 1.8vw, 1.4rem);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cmd-label { font-family: var(--font-mono); font-size: clamp(0.85rem, 1.7vw, 1.28rem); font-weight: 600; margin-bottom: var(--gap-sm); }
+
+        /* ===================================================
+           MULTI-AGENT ARCHITECTURE
+           =================================================== */
+        .ma-row { display: flex; align-items: center; gap: clamp(0.28rem, 0.65vw, 0.5rem); margin-top: var(--gap-lg); }
+
+        .ma-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: clamp(0.45rem, 1vw, 0.85rem) clamp(0.38rem, 0.85vw, 0.7rem);
+            text-align: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+        .ma-agents { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; flex: 1; }
+        .ma-label  { font-family: var(--font-display); font-size: clamp(0.58rem, 0.95vw, 0.75rem); color: var(--ink); line-height: 1.25; }
+        .ma-sub    { font-size: clamp(0.52rem, 0.76vw, 0.63rem); color: var(--ink-light); margin-top: 0.12rem; }
+        .ma-arrow  { color: var(--blue-mid); font-size: clamp(0.85rem, 1.4vw, 1.15rem); flex-shrink: 0; }
+
+        .sev-row { display: flex; gap: var(--gap-md); flex-wrap: wrap; margin-top: var(--gap-sm); }
+        .sev     { display: inline-flex; align-items: center; gap: 0.35em; font-size: var(--sz-small); font-weight: 600; }
+
+        .trig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-sm); margin-top: var(--gap-sm); }
+        .trig-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 6px; padding: clamp(0.42rem, 0.95vw, 0.7rem); text-align: center; box-shadow: var(--shadow-sm); }
+        .trig-label { font-family: var(--font-display); font-size: var(--sz-small); color: var(--ink); font-weight: 400; margin-top: 0.18rem; }
+        .trig-sub   { font-size: clamp(0.52rem, 0.75vw, 0.63rem); color: var(--ink-light); }
+
+        /* ===================================================
+           SAAS CONTEXT ENGINEERING
+           =================================================== */
+        .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); margin-top: var(--gap-md); }
+        .ctx-col-head { font-family: var(--font-display); font-size: var(--sz-small); color: var(--ink); margin-bottom: var(--gap-sm); }
+
+        .pipe-chips { display: flex; align-items: center; gap: 0.32rem; flex-wrap: wrap; margin-top: var(--gap-sm); }
+        .pipe-arrow { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.75rem; }
+
+        /* ===================================================
+           LEARNING MECHANISM
+           =================================================== */
+        .learn-flow { display: flex; align-items: stretch; gap: clamp(0.32rem, 0.85vw, 0.65rem); margin: var(--gap-lg) 0; }
+
+        .ln-node {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: clamp(0.48rem, 1.1vw, 0.92rem) clamp(0.38rem, 0.9vw, 0.75rem);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.22rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .ln-icon  { font-size: clamp(1.05rem, 2.1vw, 1.55rem); }
+        .ln-label { font-family: var(--font-display); font-size: var(--sz-small); color: var(--ink); }
+        .ln-sub   { font-size: clamp(0.53rem, 0.76vw, 0.63rem); color: var(--ink-light); line-height: 1.35; }
+        .ln-arrow { color: var(--blue-mid); font-size: clamp(0.95rem, 1.7vw, 1.3rem); flex-shrink: 0; align-self: center; }
+
+        .cadence-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap-sm); }
+
+        .cad { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 6px; padding: clamp(0.48rem, 0.95vw, 0.8rem); text-align: center; box-shadow: var(--shadow-sm); }
+        .cad-freq { font-family: var(--font-display); font-size: var(--sz-h3); }
+        .cad-desc { font-size: clamp(0.54rem, 0.8vw, 0.66rem); color: var(--ink-light); margin-top: 0.2rem; line-height: 1.35; }
+
+        /* ===================================================
+           HUMAN-AI COLLABORATION
+           =================================================== */
+        .resp-table { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); margin-top: var(--gap-lg); }
+
+        .resp-col {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: clamp(0.75rem, 1.8vw, 1.4rem);
+            box-shadow: var(--shadow-sm);
+        }
+        .resp-col.ai    { border-top: 3px solid var(--blue); }
+        .resp-col.human { border-top: 3px solid var(--orange); }
+        .resp-col h3    { margin-bottom: var(--gap-sm); }
+        .resp-col.ai    h3 { color: var(--blue); }
+        .resp-col.human h3 { color: var(--orange); }
+
+        .human-note { background: var(--orange-light); border-radius: 5px; padding: clamp(0.42rem, 0.95vw, 0.72rem); margin-top: var(--gap-sm); border: 1px solid rgba(200,90,0,0.15); }
+        .human-note p { font-size: clamp(0.54rem, 0.8vw, 0.66rem); color: var(--ink-mid); line-height: 1.45; }
+        .human-note strong { color: var(--orange); font-size: var(--sz-small); display: block; margin-bottom: 0.2rem; }
+
+        /* ===================================================
+           BENCHMARK TABLE
+           =================================================== */
+        .bench { width: 100%; border-collapse: collapse; margin-top: var(--gap-lg); }
+        .bench th {
+            font-family: var(--font-mono);
+            font-size: var(--sz-small);
+            color: var(--blue);
+            text-align: left;
+            padding: clamp(0.32rem, 0.85vw, 0.65rem) clamp(0.5rem, 1.1vw, 0.9rem);
+            border-bottom: 2px solid var(--blue);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+        .bench td {
+            font-size: var(--sz-small);
+            color: var(--ink-mid);
+            padding: clamp(0.28rem, 0.75vw, 0.56rem) clamp(0.5rem, 1.1vw, 0.9rem);
+            border-bottom: 1px solid var(--border-dim);
+            line-height: 1.4;
+            vertical-align: middle;
+            background: var(--bg-card);
+        }
+        .bench tr:last-child td { border-bottom: none; }
+        .bench tr:hover td { background: var(--bg-card-alt); }
+        .bench td:first-child { font-family: var(--font-display); color: var(--ink); }
+
+        /* ===================================================
+           DISCUSSION QUESTIONS
+           =================================================== */
+        .q-list { display: flex; flex-direction: column; gap: clamp(0.32rem, 0.95vh, 0.7rem); margin-top: var(--gap-lg); }
+
+        .q-item {
+            display: flex;
+            gap: var(--gap-md);
+            align-items: flex-start;
+            padding: clamp(0.42rem, 1vw, 0.85rem);
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.25s;
+        }
+        .q-item:hover { box-shadow: var(--shadow-md); }
+        .q-num { font-family: var(--font-display); font-size: clamp(0.9rem, 1.8vw, 1.32rem); color: var(--blue); opacity: 0.3; flex-shrink: 0; line-height: 1.2; }
+        .q-text { font-size: var(--sz-small); color: var(--ink-mid); line-height: 1.52; }
+        .q-text strong { color: var(--ink); font-weight: 600; }
+
+        /* ===================================================
+           CLOSING SLIDE
+           =================================================== */
+        .s-closing { background: var(--blue); }
+        .s-closing::before { background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); }
+        .s-closing::after  { border-color: rgba(255,255,255,0.3); }
+
+        .s-closing .slide-content { align-items: center; text-align: center; }
+
+        .s-closing .bracket-tl { border-color: rgba(255,255,255,0.3); }
+        .s-closing .snum { color: rgba(255,255,255,0.3); }
+
+        @keyframes pulse-ring {
+            0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
+            50%      { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+        }
+
+        .pulse-ring {
+            width: clamp(68px, 10.5vw, 102px);
+            height: clamp(68px, 10.5vw, 102px);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.7rem, 3.3vw, 2.8rem);
+            animation: pulse-ring 2.8s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        .closing-quote {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 2.7vw, 2.1rem);
+            color: #ffffff;
+            max-width: 30ch;
+            line-height: 1.32;
+            margin: var(--gap-lg) auto;
+        }
+
+        .closing-quote em {
+            color: #ffd580;
+            font-style: normal;
+        }
+
+        .aline-white {
+            width: clamp(32px, 5vw, 56px);
+            height: 3px;
+            background: rgba(255,255,255,0.4);
+            margin: var(--gap-sm) auto;
+        }
+
+        .closing-sub {
+            font-size: var(--sz-body);
+            color: rgba(255,255,255,0.72);
+            max-width: 52ch;
+            line-height: 1.72;
+        }
+
+        .chip-row { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: var(--gap-md); }
+
+        /* White badge variant for closing */
+        .bw {
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18em 0.65em;
+            border-radius: 4px;
+            font-size: var(--sz-small);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav-dots" id="navDots" aria-label="幻灯片导航"></nav>
+
+
+    <!-- =====================================================
+         SLIDE 01 — TITLE
+         ===================================================== -->
+    <section class="slide s-title">
+        <div class="title-topbar"></div>
+        <div class="bracket-tl"></div>
+        <div class="title-wm">AI</div>
+
+        <div class="slide-content">
+            <p class="title-eyebrow reveal">Enterprise AI Code Review Governance</p>
+            <h1 class="title-h1 reveal">
+                企业 <em>AI 代码 Review</em>能力治理方案
+            </h1>
+            <div class="aline reveal"></div>
+            <p class="title-desc reveal">
+                从稀缺到规模化——构建覆盖开发全链路的 AI 审查能力体系，<br>
+                让人工 reviewer 把精力聚焦在最有价值的 30% 判断上。
+            </p>
+            <div class="title-chips reveal">
+                <span class="badge bb">7 大审查维度</span>
+                <span class="badge bt">5 个介入阶段</span>
+                <span class="badge bo">持续学习机制</span>
+                <span class="badge bg">人机协作协议</span>
+            </div>
+        </div>
+        <div class="snum">01 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 02 — PAIN POINTS
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">为什么</div>
+            <h2 class="reveal">传统 PR Review 的三个结构性缺陷</h2>
+
+            <div class="pain-list">
+                <div class="pain-item reveal">
+                    <div class="pain-n">01</div>
+                    <div class="pain-body">
+                        <h3>稀缺性</h3>
+                        <p>资深 reviewer 是瓶颈。PR 数量随团队规模线性增长，但审查能力不同步扩张——排队是必然，质量是偶然。</p>
+                    </div>
+                </div>
+                <div class="pain-item reveal">
+                    <div class="pain-n">02</div>
+                    <div class="pain-body">
+                        <h3>重复性</h3>
+                        <p>大量 review 时间消耗在机械扫描——空指针、日志脱敏、测试缺失、依赖升级风险。高价值人力被低价值工作占据。</p>
+                    </div>
+                </div>
+                <div class="pain-item reveal">
+                    <div class="pain-n">03</div>
+                    <div class="pain-body">
+                        <h3>不一致性</h3>
+                        <p>不同 reviewer 关注点差异导致审查质量波动。相同问题在不同 PR 里命运不同，标准无法统一。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--orange);">⚡ 剪刀差正在扩大：</strong>
+                    AI 提高了代码产出速度，却没有同步提升 review 吞吐——这个差距会越来越大。
+                </p>
+            </div>
+        </div>
+        <div class="snum">02 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 03 — AI REVIEW REAL VALUE
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">真实价值</div>
+            <h2 class="reveal">AI Review 不是"更快看完代码"</h2>
+
+            <div class="vcards sg">
+                <div class="vcard reveal">
+                    <div class="vcard-icon">🔍</div>
+                    <h3>审查前移</h3>
+                    <div class="aline" style="width:24px; margin: 0.3rem 0;"></div>
+                    <p>在人工 reviewer 进入前，过滤掉 <strong>60~70%</strong> 的基础问题。提交质量门槛从人工判断前移到代码写完时。</p>
+                </div>
+                <div class="vcard reveal">
+                    <div class="vcard-icon">🎯</div>
+                    <h3>注意力聚焦</h3>
+                    <div class="aline" style="width:24px; margin: 0.3rem 0;"></div>
+                    <p>让人工 reviewer 把时间花在 <strong>业务逻辑、架构判断和系统边界</strong> 上，而不是扫描机械错误。</p>
+                </div>
+                <div class="vcard reveal">
+                    <div class="vcard-icon">🛡️</div>
+                    <h3>覆盖兜底</h3>
+                    <div class="aline" style="width:24px; margin: 0.3rem 0;"></div>
+                    <p><strong>跨文件影响、依赖链分析</strong> 等人工容易漏掉的维度，由 AI 系统性覆盖，不依赖 reviewer 的记忆力。</p>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-md);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--ink);">目标：</strong>
+                    AI 做掉 70% 的基础扫描，人把主要精力放在最值钱的 30% 判断上。
+                    这不是"替代"，而是重新定义人机分工。
+                </p>
+            </div>
+        </div>
+        <div class="snum">03 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 04 — SEVEN DIMENSIONS
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">审查内容</div>
+            <h2 class="reveal">Review 的七大维度</h2>
+
+            <div class="dim-grid sg">
+                <div class="dcard reveal">
+                    <div class="dcard-icon">🔒</div>
+                    <div class="dcard-name">Security 安全</div>
+                    <div class="dcard-desc">注入、鉴权、加密、数据泄露</div>
+                    <div class="dcard-ex">SQL 注入 · 密钥硬编码 · JWT 漏洞</div>
+                </div>
+                <div class="dcard reveal">
+                    <div class="dcard-icon">🐛</div>
+                    <div class="dcard-name">Bug 逻辑错误</div>
+                    <div class="dcard-desc">边界条件、并发、状态机、异常路径</div>
+                    <div class="dcard-ex">空指针 · Off-by-one · 竞态条件</div>
+                </div>
+                <div class="dcard reveal">
+                    <div class="dcard-icon">⚡</div>
+                    <div class="dcard-name">Performance 性能</div>
+                    <div class="dcard-desc">数据库查询、数据结构、异步调用</div>
+                    <div class="dcard-ex">N+1 查询 · 阻塞调用 · 重复计算</div>
+                </div>
+                <div class="dcard reveal">
+                    <div class="dcard-icon">🏗️</div>
+                    <div class="dcard-name">Maintainability</div>
+                    <div class="dcard-desc">DRY、圈复杂度、耦合</div>
+                    <div class="dcard-ex">重复代码 · SOLID 违反</div>
+                </div>
+                <div class="dcard reveal">
+                    <div class="dcard-icon">🧪</div>
+                    <div class="dcard-name">Test Coverage</div>
+                    <div class="dcard-desc">边界测试、异常路径、Mock 覆盖</div>
+                    <div class="dcard-ex">缺失边界用例 · 未覆盖异常分支</div>
+                </div>
+                <div class="dcard reveal">
+                    <div class="dcard-icon">✨</div>
+                    <div class="dcard-name">Code Style</div>
+                    <div class="dcard-desc">命名、格式、团队规范</div>
+                    <div class="dcard-ex warn">命名不规范 · 格式不一致</div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm); display: flex; align-items: center; gap: var(--gap-md);">
+                <span style="font-size:1.3rem; flex-shrink:0;">🔗</span>
+                <div>
+                    <p style="font-size: var(--sz-small); font-weight: 600; color: var(--ink);">
+                        Cross-file Impact 跨文件影响
+                        <span class="badge bt" style="margin-left: 0.5rem;">AI 独有优势</span>
+                    </p>
+                    <p style="font-size: clamp(0.55rem, 0.82vw, 0.68rem); color: var(--ink-light);">
+                        依赖链、接口契约、上下游 &nbsp;·&nbsp; 接口改动未同步 · 隐式依赖断裂 — 人工容易漏掉，AI 可系统性覆盖。
+                    </p>
+                </div>
+            </div>
+
+            <p class="reveal" style="font-size: var(--sz-small); color: var(--ink-light); margin-top: var(--gap-sm);">
+                ⚠️ <strong style="color: var(--ink-mid);">不在 AI Review 范围内：</strong>业务逻辑正确性 · 架构决策 — 这两项必须保留人工判断。
+            </p>
+        </div>
+        <div class="snum">04 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 05 — INSTRUCTION SYSTEM
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">Review 指令体系</div>
+            <h2 class="reveal">AI Review 质量上限 = 指令质量</h2>
+
+            <div class="lvl-stack">
+                <div class="lvl-item reveal">
+                    <div class="lvl-badge lb-global">全局<br>级</div>
+                    <div class="lvl-body">
+                        <h3>Global Instructions</h3>
+                        <p>影响所有 AI 操作，不只是 review。代表文件：<code>CLAUDE.md</code> / <code>AGENTS.md</code>。约定整体行为准则和基础安全规则。</p>
+                    </div>
+                </div>
+                <div class="lvl-item reveal">
+                    <div class="lvl-badge lb-repo">仓库<br>级</div>
+                    <div class="lvl-body">
+                        <h3>REVIEW.md — 仓库级规则</h3>
+                        <p>只影响当前仓库。结构建议：<code>Always check</code> · <code>Style</code> · <code>Skip</code>。每周 1~2h 由 instruction owner 维护。</p>
+                    </div>
+                </div>
+                <div class="lvl-item reveal">
+                    <div class="lvl-badge lb-path">路径<br>级</div>
+                    <div class="lvl-body">
+                        <h3>Path Instructions — 细粒度差异化</h3>
+                        <p>针对特定目录定制规则。<code>src/api/**</code> 严格检查认证 &nbsp;·&nbsp; <code>src/payment/**</code> 重点检查并发安全 &nbsp;·&nbsp; <code>src/gen/**</code> 跳过自动生成文件。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--orange);">实践建议：</strong>
+                    为每个仓库指定 review instruction owner，每周花 1~2 小时维护规则——规则腐烂速度往往快于维护速度，必须制度化保障。
+                </p>
+            </div>
+        </div>
+        <div class="snum">05 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 06 — FIVE PHASES OVERVIEW
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">介入阶段</div>
+            <h2 class="reveal">Review 覆盖开发全链路的五个阶段</h2>
+
+            <div class="phases sg">
+                <div class="ph reveal">
+                    <div class="ph-num">01</div>
+                    <div class="ph-title">开发过程<br>分层 Review</div>
+                    <div class="ph-desc">最上游。Spec / Plan / 实现三阶段，嵌入设计规划，作为风险前置门禁。</div>
+                </div>
+                <div class="ph reveal">
+                    <div class="ph-num">02</div>
+                    <div class="ph-title">本地 Agent<br>Review</div>
+                    <div class="ph-desc">commit / push 前，借助本地 AI 完成第一轮自检。<code>/review</code> + <code>/security-review</code></div>
+                </div>
+                <div class="ph reveal">
+                    <div class="ph-num">03</div>
+                    <div class="ph-title">Git Repo<br>Review</div>
+                    <div class="ph-desc">PR 触发，Multi-Agent 并行分析，以 inline comment 反馈到具体代码行。</div>
+                </div>
+                <div class="ph reveal">
+                    <div class="ph-num">04</div>
+                    <div class="ph-title">SaaS 平台<br>Review</div>
+                    <div class="ph-desc">Context Engineering 驱动，AST 图谱 + 40+ Linters + 多轮深度推理。</div>
+                </div>
+                <div class="ph reveal">
+                    <div class="ph-num">05</div>
+                    <div class="ph-title">人工<br>Review</div>
+                    <div class="ph-desc">业务逻辑正确性、架构合理性、最终 merge 责任——这三项保留人工。</div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-md);">
+                <p style="font-size: var(--sz-small);">
+                    越靠前的阶段，修复成本越低。五个阶段依次拦截不同类型的风险，覆盖开发全链路。
+                </p>
+            </div>
+        </div>
+        <div class="snum">06 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 07 — PHASE 1: DEV PROCESS
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">阶段 01</div>
+            <h2 class="reveal">开发过程分层 Review — 四大核心原则</h2>
+
+            <div class="twobytwo sg">
+                <div class="card reveal">
+                    <span class="badge bb" style="margin-bottom: 0.42rem; display: inline-flex;">Review 前移</span>
+                    <p style="font-size: var(--sz-small); color: var(--ink-light);">
+                        设计阶段发现问题的修复成本，远低于代码阶段。Spec 漏一个约束，到实现才发现，返工成本放大
+                        <strong style="color: var(--red);">10 倍</strong>。
+                    </p>
+                </div>
+                <div class="card reveal">
+                    <span class="badge bt" style="margin-bottom: 0.42rem; display: inline-flex;">分层 Review</span>
+                    <p style="font-size: var(--sz-small); color: var(--ink-light);">
+                        不同阶段暴露不同类型风险。Spec Review → Plan Review → Spec Compliance Review → Code Quality Review，四道独立质量门。
+                    </p>
+                </div>
+                <div class="card reveal">
+                    <span class="badge bo" style="margin-bottom: 0.42rem; display: inline-flex;">证据驱动</span>
+                    <p style="font-size: var(--sz-small); color: var(--ink-light);">
+                        <em>feels correct → proven correct</em>。Review 必须基于可验证证据：测试通过、git history、smoke check。
+                    </p>
+                </div>
+                <div class="card reveal">
+                    <span class="badge br" style="margin-bottom: 0.42rem; display: inline-flex;">Gate 化</span>
+                    <p style="font-size: var(--sz-small); color: var(--ink-light);">
+                        Review 必须具备阻断能力。模糊建议会被忽略——必须是明确的
+                        <strong style="color: var(--green);">PASS</strong> /
+                        <strong style="color: var(--red);">FAIL</strong> gate。
+                    </p>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--ink);">子代理隔离原则：</strong>
+                    reviewer subagent 不继承主会话历史，避免"上下文污染"。
+                    Review 建议是 suggestions，不是命令——先验证是否成立，再决定采纳或 push back。
+                </p>
+            </div>
+        </div>
+        <div class="snum">07 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 08 — PHASE 2: LOCAL AGENT REVIEW
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">阶段 02</div>
+            <h2 class="reveal">本地 Agent Review — Push 前的第一道防线</h2>
+
+            <div class="cmd-grid">
+                <div class="cmd-card reveal" style="border-top: 3px solid var(--blue);">
+                    <div class="cmd-label" style="color: var(--blue);">/review</div>
+                    <span class="badge bb">通用代码审查</span>
+                    <div class="div" style="margin: var(--gap-sm) 0;"></div>
+                    <ul class="alist">
+                        <li><code>gh pr list</code> → 查看待审 PR</li>
+                        <li><code>gh pr view / diff</code> → 获取详情和 diff</li>
+                        <li>输出：概述 + 代码质量 + 改进建议 + 风险点</li>
+                        <li>审查：正确性 · 项目约定 · 性能影响 · 测试覆盖 · 安全</li>
+                    </ul>
+                </div>
+                <div class="cmd-card reveal" style="border-top: 3px solid var(--red);">
+                    <div class="cmd-label" style="color: var(--red);">/security-review</div>
+                    <span class="badge br">专项安全审查</span>
+                    <div class="div" style="margin: var(--gap-sm) 0;"></div>
+                    <ul class="alist">
+                        <li>只报 <strong>≥ 0.8 置信度</strong>的明确可利用问题</li>
+                        <li>17+ 类硬性排除规则（DoS · 速率限制 · 测试文件）</li>
+                        <li>子任务并行探索 → 误报过滤 → 置信度阈值</li>
+                        <li>重点：输入校验 · 鉴权 · 加密 · 注入 · PII 泄漏</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-md);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--green);">核心价值：</strong>
+                    在 push 前就消灭基础安全漏洞——修复成本最低的时间点。
+                    单模型输出 + 严格误报控制 = 高信噪比。
+                </p>
+            </div>
+        </div>
+        <div class="snum">08 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 09 — PHASE 3: GIT REPO REVIEW
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">阶段 03</div>
+            <h2 class="reveal">Git Repo Review — Multi-Agent 并行分析</h2>
+
+            <div class="ma-row reveal">
+                <div class="ma-box" style="border-top: 3px solid var(--teal);">
+                    <div class="ma-label" style="color: var(--teal);">PR 触发</div>
+                </div>
+                <div class="ma-arrow">→</div>
+                <div class="ma-agents">
+                    <div class="ma-box" style="border-top: 3px solid var(--red);">
+                        <div class="ma-label">Correctness<br>Reviewer</div>
+                        <div class="ma-sub">逻辑 · 边界 · 并发</div>
+                    </div>
+                    <div class="ma-box" style="border-top: 3px solid var(--orange);">
+                        <div class="ma-label">Security<br>Reviewer</div>
+                        <div class="ma-sub">权限 · 注入 · 密钥</div>
+                    </div>
+                    <div class="ma-box" style="border-top: 3px solid var(--blue);">
+                        <div class="ma-label">Maintainability<br>Reviewer</div>
+                        <div class="ma-sub">抽象 · 重复 · 耦合</div>
+                    </div>
+                </div>
+                <div class="ma-arrow">→</div>
+                <div class="ma-box" style="border-top: 3px solid var(--blue);">
+                    <div class="ma-label" style="color: var(--blue);">Synthesizer</div>
+                    <div class="ma-sub">聚合·去重·过滤</div>
+                </div>
+                <div class="ma-arrow">→</div>
+                <div class="ma-box" style="border-top: 3px solid var(--green);">
+                    <div class="ma-label" style="color: var(--green);">Inline<br>Comment</div>
+                </div>
+            </div>
+
+            <div class="sev-row reveal">
+                <div class="sev" style="color: var(--red);">🔴 Important — 应在合并前修复的 bug</div>
+                <div class="sev" style="color: var(--orange);">🟡 Nit — 次要问题，不阻塞</div>
+                <div class="sev" style="color: #7c3aed;">🟣 Pre-existing — 非本次 PR 引入的已有问题</div>
+            </div>
+
+            <div class="trig-grid reveal">
+                <div class="trig-card">
+                    <div style="color: var(--green); font-size: var(--sz-small); font-weight: 600;">✓ 推荐默认</div>
+                    <div class="trig-label">PR 创建后触发一次</div>
+                    <div class="trig-sub">低成本 · 标准配置</div>
+                </div>
+                <div class="trig-card">
+                    <div style="color: var(--orange); font-size: var(--sz-small); font-weight: 600;">⚡ 高风险服务</div>
+                    <div class="trig-label">每次 push 都触发</div>
+                    <div class="trig-sub">高成本 · 核心服务专用</div>
+                </div>
+                <div class="trig-card">
+                    <div style="color: var(--blue); font-size: var(--sz-small); font-weight: 600;">👤 手动按需</div>
+                    <div class="trig-label">@claude review</div>
+                    <div class="trig-sub">成本可控 · 灵活触发</div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm);">
+                <p style="font-size: var(--sz-small);">
+                    单模型一次性输出容易产生噪声；<strong style="color: var(--blue);">多 agent 并行 + synthesizer 过滤</strong>是降低误报、提高信噪比的关键设计。
+                </p>
+            </div>
+        </div>
+        <div class="snum">09 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 10 — PHASE 4: SAAS CONTEXT ENGINEERING
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">阶段 04</div>
+            <h2 class="reveal">SaaS 平台 Review — Context Engineering</h2>
+
+            <div class="hbox reveal" style="margin-bottom: var(--gap-md);">
+                <p style="font-size: var(--sz-small);">
+                    <em style="color: var(--blue);">"我们做的是 context engineering，而不是 prompt engineering。"</em>
+                    &nbsp;— CodeRabbit Director of AI
+                </p>
+            </div>
+
+            <div class="ctx-grid reveal">
+                <div>
+                    <div class="ctx-col-head" style="color: var(--blue);">📦 上下文来源（并行构建）</div>
+                    <ul class="alist">
+                        <li><strong style="color: var(--ink);">AST 代码图谱</strong> — 函数/类/变量调用关系图，理解改动传播路径</li>
+                        <li><strong style="color: var(--ink);">Import 依赖图</strong> — 识别改动影响的相关文件范围</li>
+                        <li><strong style="color: var(--ink);">40+ Linters/SAST</strong> — 静态分析结果作为 LLM 推理参考信号</li>
+                        <li><strong style="color: var(--ink);">知识库 Learnings</strong> — 历史 PR 沉淀的团队习惯和规范</li>
+                        <li><strong style="color: var(--ink);">MCP 外部文档</strong> — Jira · Notion · Confluence 业务上下文</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="ctx-col-head" style="color: var(--orange);">🤖 多模型分工（精细成本控制）</div>
+                    <ul class="alist">
+                        <li><strong style="color: var(--ink);">o4-mini / o3</strong> — 多行 Bug 检测、跨文件重构（推理密集型）</li>
+                        <li><strong style="color: var(--ink);">GPT-4.1</strong> — PR 摘要、文档生成（长上下文型）</li>
+                        <li><strong style="color: var(--ink);">Claude Opus/Sonnet</strong> — 深度推理、生成 review comment</li>
+                        <li><strong style="color: var(--ink);">Nemotron-30B</strong> — 上下文收集与摘要（降成本）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pipe-chips reveal">
+                <span style="font-size: var(--sz-small); color: var(--ink-light);">流水线：</span>
+                <span class="badge bb">Webhook 触发</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bt">沙箱初始化</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bb">上下文工程 ×5</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bt">轻量摘要</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bo">多轮深度推理</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bg">噪声过滤</span>
+                <span class="pipe-arrow">→</span>
+                <span class="badge bg">Comment 输出</span>
+            </div>
+        </div>
+        <div class="snum">10 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 11 — LEARNING MECHANISM
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">持续优化</div>
+            <h2 class="reveal">持续学习机制 — AI 需要不断适应团队习惯</h2>
+
+            <div class="learn-flow reveal">
+                <div class="ln-node">
+                    <div class="ln-icon">💬</div>
+                    <div class="ln-label">PR 对话</div>
+                    <div class="ln-sub">开发者反馈<br>接受 / 拒绝 / 纠正</div>
+                </div>
+                <div class="ln-arrow">→</div>
+                <div class="ln-node">
+                    <div class="ln-icon">🧠</div>
+                    <div class="ln-label">Learnings 沉淀</div>
+                    <div class="ln-sub">接受 → 强化规则<br>拒绝 → 降低权重</div>
+                </div>
+                <div class="ln-arrow">→</div>
+                <div class="ln-node">
+                    <div class="ln-icon">📈</div>
+                    <div class="ln-label">持续改进</div>
+                    <div class="ln-sub">影响后续所有 PR<br>越来越懂团队</div>
+                </div>
+                <div class="ln-arrow">→</div>
+                <div class="ln-node">
+                    <div class="ln-icon">🎯</div>
+                    <div class="ln-label">信噪比提升</div>
+                    <div class="ln-sub">采纳率上升<br>误报减少</div>
+                </div>
+            </div>
+
+            <div class="cadence-grid reveal">
+                <div class="cad">
+                    <div class="cad-freq" style="color: var(--green);">每次 PR</div>
+                    <div class="cad-desc">AI review 作为标准前置步骤，作者先处理高置信问题</div>
+                </div>
+                <div class="cad">
+                    <div class="cad-freq" style="color: var(--teal);">每周 30–60m</div>
+                    <div class="cad-desc">复盘 AI review 质量：误报率、采纳率、漏报案例</div>
+                </div>
+                <div class="cad">
+                    <div class="cad-freq" style="color: var(--blue);">每周 1–2h</div>
+                    <div class="cad-desc">instruction owner 维护规则和 prompt</div>
+                </div>
+                <div class="cad">
+                    <div class="cad-freq" style="color: var(--orange);">每季度</div>
+                    <div class="cad-desc">高风险仓库双人 review 策略评估</div>
+                </div>
+            </div>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-sm);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--ink);">@bot 对话纠正</strong> → 实时学习偏好 &nbsp;|&nbsp;
+                    Learnings 沉淀影响后续所有 review，使 AI 持续适应团队习惯。
+                </p>
+            </div>
+        </div>
+        <div class="snum">11 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 12 — HUMAN-AI COLLABORATION
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">人机协作</div>
+            <h2 class="reveal">边界划分 — AI 做什么，人做什么</h2>
+
+            <div class="resp-table reveal">
+                <div class="resp-col ai">
+                    <h3>🤖 AI 负责</h3>
+                    <ul class="alist" style="margin-top: var(--gap-sm);">
+                        <li>第一轮全量扫描</li>
+                        <li>基础安全 / 测试 / 文档问题</li>
+                        <li>风险点预标注</li>
+                        <li>低复杂度修复建议</li>
+                        <li>评论聚合与 briefing</li>
+                    </ul>
+                    <div class="div"></div>
+                    <p style="font-size: clamp(0.54rem, 0.8vw, 0.66rem); color: var(--ink-light);">
+                        <strong style="color: var(--ink-mid);">PR 打开时</strong>：生成摘要 + 高风险区域标注<br>
+                        <strong style="color: var(--ink-mid);">人工进入前</strong>：生成 briefing（改了什么 / 最值得看哪里）<br>
+                        <strong style="color: var(--ink-mid);">Review 收尾</strong>：汇总 comment + closing checklist
+                    </p>
+                </div>
+                <div class="resp-col human">
+                    <h3>👤 人工负责</h3>
+                    <ul class="alist" style="margin-top: var(--gap-sm);">
+                        <li>业务逻辑正确性判断</li>
+                        <li>架构合理性判断</li>
+                        <li>系统边界和回滚策略</li>
+                        <li>最终 merge 责任</li>
+                    </ul>
+                    <div class="div"></div>
+                    <div class="human-note">
+                        <strong>核心判断力不能外包</strong>
+                        <p>AI 不理解域模型，无法判断折扣计算对特定定价规则是否正确；无法评估 PR 整体设计方向是否符合系统目标。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="snum">12 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 13 — BENCHMARK
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">衡量质量</div>
+            <h2 class="reveal">Benchmark — 如何衡量 AI Review 质量</h2>
+
+            <table class="bench reveal">
+                <thead>
+                    <tr>
+                        <th>北极星指标</th>
+                        <th>说明</th>
+                        <th>定位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>用户接受率</td>
+                        <td>review comment 被开发者采纳的比例</td>
+                        <td><span class="badge bt">最直接价值信号</span></td>
+                    </tr>
+                    <tr>
+                        <td>信噪比 (SNR)</td>
+                        <td>有效 comment / 总 comment</td>
+                        <td><span class="badge bb">衡量噪声水平</span></td>
+                    </tr>
+                    <tr>
+                        <td>可读性</td>
+                        <td>comment 是否表达清晰、定位准确</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>详细程度</td>
+                        <td>问题描述、复现场景、修复建议是否完整</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>p95 延迟</td>
+                        <td>review 完成时间的长尾分布</td>
+                        <td><span class="badge bo">工程 SLA</span></td>
+                    </tr>
+                    <tr>
+                        <td>成本</td>
+                        <td>每次 review 的 token 消耗和费用</td>
+                        <td><span class="badge bo">可持续性</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="hbox reveal" style="margin-top: var(--gap-md);">
+                <p style="font-size: var(--sz-small);">
+                    <strong style="color: var(--ink);">企业内部 Benchmark 建议：</strong>
+                    收集历史高质量 PR (golden comments) → 持续跟踪 AI comment 与开发者后续修复的对齐率 → 定期抽样做人工 precision/recall 评估 → 建立 regression 测试集防止质量下降。
+                </p>
+            </div>
+        </div>
+        <div class="snum">13 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 14 — DISCUSSION QUESTIONS
+         ===================================================== -->
+    <section class="slide">
+        <div class="bracket-tl"></div>
+        <div class="slide-content">
+            <div class="stag reveal">研讨议题</div>
+            <h2 class="reveal">五个没有标准答案的关键问题</h2>
+
+            <div class="q-list">
+                <div class="q-item reveal">
+                    <div class="q-num">1</div>
+                    <div class="q-text"><strong>置信门槛设多高？</strong> AI review 实测只能发现约 40% 的真实问题。门槛高了漏报多，门槛低了噪声淹没信号。你们团队对这两种错误的容忍度各是多少？</div>
+                </div>
+                <div class="q-item reveal">
+                    <div class="q-num">2</div>
+                    <div class="q-text"><strong>AI 该不该有阻断权？</strong> 目前主流做法是"AI 只建议，人工 merge"。随着采纳率提升，是否应赋予高置信安全漏洞自动 block 能力？阻断权一旦开放，谁来对误报负责？</div>
+                </div>
+                <div class="q-item reveal">
+                    <div class="q-num">3</div>
+                    <div class="q-text"><strong>规则文件如何避免变成"墓地"？</strong> REVIEW.md 写了很多规则，但规则腐烂速度往往快于维护速度。instruction owner 机制如何保证不流于形式？</div>
+                </div>
+                <div class="q-item reveal">
+                    <div class="q-num">4</div>
+                    <div class="q-text"><strong>资深 reviewer 省下来的时间去哪了？</strong> AI 做掉 70% 基础扫描后，资深工程师会真的转向架构判断，还是被更多 PR 填满？junior 的学习机会是否同步压缩？</div>
+                </div>
+                <div class="q-item reveal">
+                    <div class="q-num">5</div>
+                    <div class="q-text"><strong>责任链如何重新定义？</strong> 一个 bug 通过了 AI review 和人工 review 后上线——责任在谁？AI 介入让"我以为没问题"有了新的理由。早讨论，好过事故后追溯。</div>
+                </div>
+            </div>
+        </div>
+        <div class="snum">14 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE 15 — CLOSING (deep blue inversion)
+         ===================================================== -->
+    <section class="slide s-closing">
+        <div class="bracket-tl"></div>
+
+        <div class="slide-content">
+            <div class="pulse-ring reveal">🎯</div>
+
+            <div class="closing-quote reveal">
+                AI 做掉 <em>70% 的基础扫描</em>，<br>
+                人把精力放在<em>最值钱的 30%</em> 判断上。
+            </div>
+
+            <div class="aline-white reveal"></div>
+
+            <p class="closing-sub reveal">
+                这不是"AI 替代 reviewer"，而是重新定义人机分工——<br>
+                让每一层 review 都在最适合它的阶段介入。
+            </p>
+
+            <div class="chip-row reveal">
+                <span class="bw">审查前移</span>
+                <span class="bw">证据驱动</span>
+                <span class="bw">持续学习</span>
+                <span class="bw">Gate 化阻断</span>
+                <span class="bw">人机协作</span>
+            </div>
+        </div>
+        <div class="snum">15 / 15</div>
+    </section>
+
+
+    <!-- =====================================================
+         SLIDE PRESENTATION CONTROLLER
+         ===================================================== -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides  = Array.from(document.querySelectorAll('.slide'));
+                this.total   = this.slides.length;
+                this.current = 0;
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupScrollTracker();
+                this.setupNavDots();
+                this.updateUI(0);
+                this.slides[0].classList.add('visible');
+            }
+
+            setupIntersectionObserver() {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const idx = this.slides.indexOf(entry.target);
+                            if (idx !== -1) this.updateUI(idx);
+                        }
+                    });
+                }, { threshold: 0.5 });
+                this.slides.forEach(s => obs.observe(s));
+            }
+
+            setupScrollTracker() {
+                window.addEventListener('scroll', () => {
+                    const idx = Math.round(window.scrollY / window.innerHeight);
+                    this.current = Math.max(0, Math.min(idx, this.total - 1));
+                }, { passive: true });
+            }
+
+            updateUI(idx) {
+                this.current = idx;
+                const pct = ((idx + 1) / this.total) * 100;
+                document.getElementById('progressBar').style.width = pct + '%';
+                document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === idx);
+                });
+            }
+
+            goTo(idx) {
+                idx = Math.max(0, Math.min(idx, this.total - 1));
+                this.slides[idx].scrollIntoView({ behavior: 'smooth' });
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                    switch (e.key) {
+                        case 'ArrowDown': case 'ArrowRight': case ' ':
+                            e.preventDefault(); this.goTo(this.current + 1); break;
+                        case 'ArrowUp': case 'ArrowLeft':
+                            e.preventDefault(); this.goTo(this.current - 1); break;
+                        case 'Home': e.preventDefault(); this.goTo(0); break;
+                        case 'End':  e.preventDefault(); this.goTo(this.total - 1); break;
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let startY = 0, startT = 0;
+                document.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].clientY; startT = Date.now();
+                }, { passive: true });
+                document.addEventListener('touchend', (e) => {
+                    const dy = startY - e.changedTouches[0].clientY;
+                    const dt = Date.now() - startT;
+                    if (Math.abs(dy) > 50 && dt < 500) this.goTo(this.current + (dy > 0 ? 1 : -1));
+                }, { passive: true });
+            }
+
+            setupNavDots() {
+                const nav = document.getElementById('navDots');
+                this.slides.forEach((_, idx) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'nav-dot';
+                    dot.setAttribute('aria-label', `跳转到第 ${idx + 1} 张`);
+                    dot.addEventListener('click', () => this.goTo(idx));
+                    nav.appendChild(dot);
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => new SlidePresentation());
+        } else {
+            new SlidePresentation();
+        }
+    </script>
+</body>
+</html>
